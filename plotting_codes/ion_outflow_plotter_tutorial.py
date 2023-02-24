@@ -18,7 +18,7 @@ import spacepy.datamodel as dm
 from spacepy import pybats
 from spacepy.pybats import bats
 
-path_outs = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/MF_20230124/y=0_mhd_1_n00002000_01552245.outs'
+path_outs = '/Users/kdoubles/Documents/IonOutflow_Data/SF_20230220/y=0_mhd_1_n00008000_00023679.outs'
 #%%
 #Reads in the file so Python knows how to plot it
 mhd = pybats.IdlFile(path_outs)
@@ -42,7 +42,7 @@ fig, ax = mhd_cont.add_grid_plot()
 #add_contour function. 
 #Create a new figure showing the contour of the cuts
 fig = plt.figure(figsize=[8,4])
-mhd_cont.switch_frame(60)
+mhd_cont.switch_frame(2)
 fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'rho', target=fig,loc = 121 ,dolog = True, xlim=[-10,10], ylim=[-10,10],add_cbar=True)
 
 #plt.title('Y=0, Pressure, Single Fluid')
@@ -70,7 +70,7 @@ print(mhd['r'])
 #Stream scatter for velocity field
 
 fig = plt.figure(figsize=[10,4])
-mhd_cont.switch_frame(48)
+mhd_cont.switch_frame(0)
 fig, ax, cont, cbar = mhd_cont.add_stream_scatter('ux', 'uz',target = fig, loc = 121,\
                                 xlim=[-5,5], ylim=[-5,5],colors='Gray')
 
