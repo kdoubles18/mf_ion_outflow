@@ -18,15 +18,13 @@ import spacepy.datamodel as dm
 from spacepy import pybats
 from spacepy.pybats import bats
 
-path_outs = '/Users/kdoubles/Documents/IonOutflow_Data/SF_20230220/y=0_mhd_1_n00008000_00023679.outs'
+path_outs = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230225/y=0_mhd_1_n00015836_00622321.outs'
 #%%
 #Reads in the file so Python knows how to plot it
 mhd = pybats.IdlFile(path_outs)
 
 #Attrs shows what is present in the file.
 print(mhd.keys())
-#print(mhd.attrs['times'])
-#print(f"Currently loaded frame {mhd.attrs['iframe']} representing T={mhd.attrs['times']}.")
 
 #Bats2d allows you to plot different types of plots. 
 mhd_cont = bats.Bats2d(path_outs)
@@ -38,14 +36,16 @@ mhd_cont.switch_frame(0)
 fig, ax = mhd_cont.add_grid_plot()
 
 #%%
-#Set up to plot y=0 cut. Change third value to plot different attribute in the
-#add_contour function. 
-#Create a new figure showing the contour of the cuts
+'''
+Set up to plot y=0 cut. Change third value to plot different attribute in the
+#add_contour function. Create a new figure showing the contour of the cuts.
+'''
 fig = plt.figure(figsize=[8,4])
-mhd_cont.switch_frame(2)
+mhd_cont.switch_frame(70)
 fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'rho', target=fig,loc = 121 ,dolog = True, xlim=[-10,10], ylim=[-10,10],add_cbar=True)
+plt.title('Y=0, Pressure, Single Fluid')
 
-#plt.title('Y=0, Pressure, Single Fluid')
+
 mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
 
 fig.tight_layout()
@@ -70,16 +70,35 @@ print(mhd['r'])
 #Stream scatter for velocity field
 
 fig = plt.figure(figsize=[10,4])
-mhd_cont.switch_frame(0)
+mhd_cont.switch_frame(70)
 fig, ax, cont, cbar = mhd_cont.add_stream_scatter('ux', 'uz',target = fig, loc = 121,\
-                                xlim=[-5,5], ylim=[-5,5],colors='Gray')
+                                xlim=[-10,10], ylim=[-10,10],colors='Gray')
+
+mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
 
 plt.xlabel(r'$R_e$')
 plt.ylabel(r'$R_e$')
 plt.title('Y=0, Streamline Velocity with Radial Velocity', fontsize=10)
 
-mhd_cont.add_pcolor('x','z','ur',zlim=[-600,600],target=ax,add_cbar=True,cmap='coolwarm')
+mhd_cont.add_pcolor('x','z','ur',zlim=[-400,400],target=ax,add_cbar=True,cmap='coolwarm')
 #mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
+
+#%%
+mhd_cont.calc_jxb()
+mhd_cont.calc_gradP()
+
+#%%
+for i in range(mhd.attrs['nframe']):
+    mhd_cont.switch_frame(i)
+    fig, ax = plt.subplots(2,2,figsize=[10,10])
+    
+    fig.suptitle(f"%ith iteration - 3 min interval" %i)
+    ax[0,0] = mhd_cont.add_contour('x', 'z', 'rho', target=ax[0,0],xlim=[-10,10],ylim=[-10,10],add_cbar=True,title='Density')
+    ax[0,1] = mhd_cont.add_contour('x', 'z', 'p', target=ax[0,1],add_cbar=True,clabel=None,xlim=[-10,10],ylim=[-10,10],title='Pressure')
+    ax[1,0] = mhd_cont.add_contour('x', 'z', 'jb', target=ax[1,0],add_cbar=True,clabel=None,xlim=[-5,5],ylim=[-5,5],title='J x B')
+    ax[1,1] = mhd_cont.add_contour('x', 'z', 'gradP', target=ax[1,1],add_cbar=True,clabel=None,xlim=[-5,5],ylim=[-5,5],title='Grad P')
+    fig.tight_layout()
+
 
 #%%
 #Plot all the .out files in the y=0 or z=0 outputs.
@@ -97,3 +116,47 @@ for i in range(mhd.attrs['nframe']):
     ax[0,1] = mhd_cont.add_contour('x', 'z', 'p', target=ax[0,1],add_cbar=True,clabel=None,xlim=[-20,20],ylim=[-20,20],title='P')
     ax[1,0] = mhd_cont.add_contour('x', 'z', 'oprho', target=ax[1,0],add_cbar=True,clabel=None,xlim=[-20,20],ylim=[-20,20],zlim=[0,30],title='Op Dens')
     ax[1,1] = mhd_cont.add_contour('x', 'z', 'rho', target=ax[1,1],add_cbar=True,clabel=None,xlim=[-20,20],ylim=[-20,20],zlim=[0,30],title='Dens')
+
+#%%
+'''
+Plotting log file values & mag grid values
+'''
+
+mag_outs_log = bats.BatsLog('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230228/log_n008000.log')
+mag_log = bats.GeoIndexFile('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230225/geoindex_n00000000.log')
+
+mag_grid = bats.MagGridFile('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230225/mag_grid_n00009568_00622321.outs')
+
+
+mag_outs_log['b'] = np.sqrt(mag_outs_log['bx']**2.0 + mag_outs_log['by']**2.0 + mag_outs_log['bz']**2.0)
+    
+
+
+print(mag_outs_log.keys())
+print(mag_outs_log.values())
+
+
+fig, ((ax0,ax1),(ax2,ax3)) = plt.subplots(2,2,figsize=[10,10])
+fig.suptitle('Run 01 - Log File Results')
+ax0.plot(mag_outs_log['time'],mag_outs_log['rho'])
+ax1.plot(mag_outs_log['time'],mag_outs_log['b'])
+ax2.plot(mag_outs_log['time'],mag_outs_log['dst'])
+ax3.plot(mag_outs_log['time'],mag_outs_log['p'])
+ax0.set_title('Density')
+ax1.set_title('B')
+ax2.set_title('Dst')
+ax3.set_title('Pressure')
+ax0.set_ylabel('Number Density')
+ax1.set_ylabel('nT')
+ax2.set_ylabel('Dst')
+ax3.set_ylabel('pressure')
+
+plt.setp(ax0.get_xticklabels(),rotation=30,ha='right')
+plt.setp(ax1.get_xticklabels(),rotation=30,ha='right')
+plt.setp(ax2.get_xticklabels(),rotation=30,ha='right')
+plt.setp(ax3.get_xticklabels(),rotation=30,ha='right')
+
+
+
+               
+fig.tight_layout()
