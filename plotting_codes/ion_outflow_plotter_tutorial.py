@@ -18,7 +18,7 @@ import spacepy.datamodel as dm
 from spacepy import pybats
 from spacepy.pybats import bats
 
-path_outs = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230225/y=0_mhd_1_n00015836_00622321.outs'
+path_outs = '/Users/kdoubles/Data/run_results/SF_20230306/y=0_mhd_1_n00008000_00480948.outs'
 #%%
 #Reads in the file so Python knows how to plot it
 mhd = pybats.IdlFile(path_outs)
@@ -70,7 +70,7 @@ print(mhd['r'])
 #Stream scatter for velocity field
 
 fig = plt.figure(figsize=[10,4])
-mhd_cont.switch_frame(70)
+mhd_cont.switch_frame(60)
 fig, ax, cont, cbar = mhd_cont.add_stream_scatter('ux', 'uz',target = fig, loc = 121,\
                                 xlim=[-10,10], ylim=[-10,10],colors='Gray')
 
@@ -122,14 +122,9 @@ for i in range(mhd.attrs['nframe']):
 Plotting log file values & mag grid values
 '''
 
-mag_outs_log = bats.BatsLog('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230228/log_n008000.log')
-mag_log = bats.GeoIndexFile('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230225/geoindex_n00000000.log')
-
-mag_grid = bats.MagGridFile('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230225/mag_grid_n00009568_00622321.outs')
-
+mag_outs_log = bats.BatsLog('/Users/kdoubles/Data/run_results/SF_20230306/log_n008000.log')
 
 mag_outs_log['b'] = np.sqrt(mag_outs_log['bx']**2.0 + mag_outs_log['by']**2.0 + mag_outs_log['bz']**2.0)
-    
 
 
 print(mag_outs_log.keys())
@@ -160,3 +155,47 @@ plt.setp(ax3.get_xticklabels(),rotation=30,ha='right')
 
                
 fig.tight_layout()
+
+#%%
+
+
+mag_grid_temp_20 = bats.MagGridFile('/Users/kdoubles/Data/run_results/Run_IBC_Temp20/mag_grid_n00008000_00480633-001.outs')
+#mag_grid_temp_50 = bats.MagGridFile('/Users/kdoubles/Data/run_results/SF_20230306/mag_grid_n00008000_00480948.outs')
+
+
+lons = mag_grid_temp_20['Lon']
+lats = mag_grid_temp_20['Lat']
+dLon = lons[1]-lons[0]
+dLat = lats[1]-lats[0]
+
+xloc = (lons >= 1) & (lons <= 360)
+yloc = (lats >= 10) & (lats <= 85)
+
+
+mag_grid_temp_20.calc_h()
+
+lat_dBh_20 = mag_grid_temp_20['dBh'][0,:]
+
+fig = plt.figure(figsize=[10,10])
+plt.plot(lat_dBh_20,mag_outs_log['time'])
+plt.xlabel('dBh')
+plt.ylabel('time')
+plt.ylim(10,75)
+
+
+
+
+
+
+
+#%%
+mag_log = bats.GeoIndexFile('/Users/kdoubles/Data/run_results/SF_20230306/geoindex_n00000000.log')
+
+
+
+
+
+
+
+
+
