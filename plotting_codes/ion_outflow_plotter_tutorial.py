@@ -18,7 +18,7 @@ import spacepy.datamodel as dm
 from spacepy import pybats
 from spacepy.pybats import bats
 
-path_outs = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230303/y=0_mhd_1_n00008000_00480633.outs'
+path_outs = '/Users/kdoubles/Data/run_results/run_02_full/y=0_mhd_1_n00008000_00951393.outs'
 #%%
 #Reads in the file so Python knows how to plot it
 mhd = pybats.IdlFile(path_outs)
@@ -122,7 +122,7 @@ for i in range(mhd.attrs['nframe']):
 Plotting log file values & mag grid values
 '''
 
-mag_outs_log = bats.BatsLog('//Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230303/log_n008000.log')
+mag_outs_log = bats.BatsLog('/Users/kdoubles/Data/run_results/run_02_full/log_n008000.log')
 
 mag_outs_log['b'] = np.sqrt(mag_outs_log['bx']**2.0 + mag_outs_log['by']**2.0 + mag_outs_log['bz']**2.0)
 
@@ -157,9 +157,9 @@ plt.setp(ax3.get_xticklabels(),rotation=30,ha='right')
 fig.tight_layout()
 
 #%%
+from numpy.lib.recfunctions import append_fields
 
-
-mag_grid = bats.MagGridFile('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230303/mag_grid_n00008000_00480633.outs')
+mag_grid = bats.MagGridFile('/Users/kdoubles/Data/run_results/run_02_full/mag_grid_n00008000_00951393.outs')
 #mag_grid_temp_50 = bats.MagGridFile('/Users/kdoubles/Data/run_results/SF_20230306/mag_grid_n00008000_00480948.outs')
 
 
@@ -171,17 +171,14 @@ dLat = lats[1]-lats[0]
 xloc = (lons >= 1) & (lons <= 360)
 yloc = (lats >= 10) & (lats <= 85)
 
+mag_grid.calc_h()
+mag_grid['dBh_arr'] = np.zeros((360,171,mag_grid.attrs['nframe']))
 
-for i in range(mag_grid.attrs['nframe']):
-    mag_grid.calc_h()
-    mag_grid['dBh_arr'] = mag_grid['dBh']
-    mag_grid.attrs['runtimes_arr'] = np.reshape(mag_grid.attrs['runtimes'],(301))
-    mag_grid['dBh_arr'] = mag_grid.attrs['runtimes']*mag_grid['dBh_arr']
+dBh = np.stack((mag_grid['dBh_arr'],mag_grid.attrs['runtimes']),axis=2)
+#dBh = np.array(dBh.reshape((mag_grid['dBh'].shape[0],mag_grid['dBh'].shape[1],mag_grid.attrs['nframe'])))
+
+#for i in range(mag_grid.attrs['nframe']):
     
-
-plt.figure(figsize=(10,10))
-plt.plot(mag_grid.attrs['runtimes'],mag_grid['dBh'])
-
 
 
 
