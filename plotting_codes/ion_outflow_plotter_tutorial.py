@@ -25,7 +25,7 @@ mhd = pybats.IdlFile(path_outs)
 
 #Attrs shows what is present in the file.
 print(mhd.keys())
-
+print(mhd.attrs['time'])
 #Bats2d allows you to plot different types of plots. 
 mhd_cont = bats.Bats2d(path_outs)
 mhd_cont.calc_b()
@@ -159,12 +159,12 @@ fig.tight_layout()
 #%%
 
 
-mag_grid_temp_20 = bats.MagGridFile('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230303/mag_grid_n00008000_00480633.outs')
+mag_grid = bats.MagGridFile('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/SF_20230303/mag_grid_n00008000_00480633.outs')
 #mag_grid_temp_50 = bats.MagGridFile('/Users/kdoubles/Data/run_results/SF_20230306/mag_grid_n00008000_00480948.outs')
 
 
-lons = mag_grid_temp_20['Lon']
-lats = mag_grid_temp_20['Lat']
+lons = mag_grid['Lon']
+lats = mag_grid['Lat']
 dLon = lons[1]-lons[0]
 dLat = lats[1]-lats[0]
 
@@ -172,33 +172,16 @@ xloc = (lons >= 1) & (lons <= 360)
 yloc = (lats >= 10) & (lats <= 85)
 
 
-mag_grid_temp_20.calc_h()
-stime = mag_outs_log['time'][0]
-etime = mag_outs_log['time'][-1]
-dtime = etime - stime
-
-lat_dBh_20 = mag_grid_temp_20['dBh'][0,:]
-
-data_dict = {"time": [],
-             "year": [],
-             "month":[],
-             "day": [],
-             "hour": [],
-             "minute": [],
-             "symh": []} 
-
-for line in mag_outs_log['time']:
-    tmp = line.split()
-    data_dict["year"].append(int(tmp[0]))
-    data_dict["month"].append(int(tmp[1]))
-    data_dict["day"].append(int(tmp[1]))
-    data_dict["hour"].append(int(tmp[2]))
-    data_dict["minute"].append(int(tmp[3]))
+for i in range(mag_grid.attrs['nframe']):
+    mag_grid.calc_h()
+    mag_grid['dBh_arr'] = mag_grid['dBh']
+    mag_grid.attrs['runtimes_arr'] = np.reshape(mag_grid.attrs['runtimes'],(301))
+    mag_grid['dBh_arr'] = mag_grid.attrs['runtimes']*mag_grid['dBh_arr']
     
-    #create datetime in each line
-    time0 = dt.datetime(int(tmp[0]),1,1,int(tmp[3]),int(tmp[4]),0)\
-        + dt.timedelta(days=int(tmp[1])-1)
-    data_dict["time"].append(time0)
+
+plt.figure(figsize=(10,10))
+plt.plot(mag_grid.attrs['runtimes'],mag_grid['dBh'])
+
 
 
 
