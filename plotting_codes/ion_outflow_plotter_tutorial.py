@@ -159,7 +159,7 @@ fig.tight_layout()
 #%%
 from numpy.lib.recfunctions import append_fields
 
-mag_grid = bats.MagGridFile('/Users/kdoubles/Data/run_results/run_02_full/mag_grid_n00008000_00951393.outs')
+mag_grid = bats.MagGridFile('/Users/kdoubles/Data/Outflow_Runs/Run_Dates/Run_02_full/mag_grid_n00008000_00951393-001.outs')
 #mag_grid_temp_50 = bats.MagGridFile('/Users/kdoubles/Data/run_results/SF_20230306/mag_grid_n00008000_00480948.outs')
 
 
@@ -174,7 +174,7 @@ yloc = (lats >= 10) & (lats <= 85)
 mag_grid.calc_h()
 mag_grid['dBh_arr'] = np.zeros((360,171,mag_grid.attrs['nframe']))
 
-dBh = np.stack((mag_grid['dBh_arr'],mag_grid.attrs['runtimes']),axis=2)
+dBh = np.recarray((mag_grid['dBh_arr'],mag_grid.attrs['runtimes']))
 #dBh = np.array(dBh.reshape((mag_grid['dBh'].shape[0],mag_grid['dBh'].shape[1],mag_grid.attrs['nframe'])))
 
 #for i in range(mag_grid.attrs['nframe']):
