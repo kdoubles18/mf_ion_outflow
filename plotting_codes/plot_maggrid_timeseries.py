@@ -15,14 +15,15 @@ import spacepy.datamodel as dm
 from spacepy.pybats import bats
 import warnings
 from matplotlib import MatplotlibDeprecationWarning
+from matplotlib.gridspec import GridSpec
 warnings.filterwarnings("ignore",category=MatplotlibDeprecationWarning)
 
 ## To make Dan happy or something, idk
 splot.style('default')
 
 ## Change to match your own directory structure
-directory = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/Run_02_full/'
-filename = 'mag_grid_n00008000_00951393.outs'
+directory = '/Users/kdoubles/Data/run_results/run_01_nominal_full/'
+filename = 'mag_grid_n00008000_00872603.outs'
 
 ## Read file, check number of frames.
 mag_grid = bats.MagGridFile('{}/{}'.format(directory,filename))
@@ -71,7 +72,7 @@ for iFrame in range(nFrame):
 #print(np.shape(np.asarray(mag_grid_dict['lat_avg'])[:,0]))
 
 ## Plot Northern Hemisphere
-fig, ax = plt.subplots(figsize=(14,8))
+fig, ax = plt.subplots(figsize=[14,8])
 for iLat in np.arange(85,171,10): ## start from Equator, do every 10 deg
 	ax.plot(mag_grid_dict['times'],
         	np.asarray(mag_grid_dict['lat_avg'])[:,iLat],
@@ -99,21 +100,19 @@ plt.close()
 
 
 #Some subplot cool stuff
-fig, axs = plt.subplots(9,1,figsize=[14,24],sharex=True)
+fig = plt.figure(figsize=[8,16])
 for iLat in np.arange(85.171,10):
-    axs[iLat].plot(mag_grid_dict['times'],
-               np.asarray(mag_grid_dict['lat_avg'])[:,iLat])
-    axs[iLat].set_xlabel('Simulation Time [s]')
-    axs[iLat].set_ylabel('dBh [nT]')
-    axs[iLat].set_title('Northern Hemisphere')
-
-#grid spec
-#axs.set_title('Run 02 - dBh, 10 eV Temperature')
-#axs.set_xlabel('Simulation Time [s]')
-#axs.set_ylabel('dBh [nT]')
-#axs.set_title('Northern Hemisphere')
+    gs0 = GridSpec(1, 9, figure=fig)
+    for n in range(iLat):   
+        ax0 = fig.add_subplot(gs0[iLat])
+        ax0.plot(mag_grid_dict['time'],
+                np.asarray(mag_grid_dict['lat_avg'])[:,iLat],
+                label = 'Lat = {}'.format(iLat-85))
+        
 plt.show()
-
+ax0.set_title('Run 02 - dBh, 10 eV Temperature')
+ax0.set_xlabel('Simulation Time [s]')
+ax0.set_ylabel('dBh [nT]')
 
 
 

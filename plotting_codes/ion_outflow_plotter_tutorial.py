@@ -18,7 +18,7 @@ import spacepy.datamodel as dm
 from spacepy import pybats
 from spacepy.pybats import bats
 
-path_outs = '/Users/kdoubles/Data/run_results/run_02_full/y=0_mhd_1_n00008000_00951393.outs'
+path_outs = '/Users/kdoubles/Data/run_results/test_run_vpara/y=0_mhd_1_n00000080_00017702.outs'
 #%%
 #Reads in the file so Python knows how to plot it
 mhd = pybats.IdlFile(path_outs)
@@ -41,7 +41,7 @@ Set up to plot y=0 cut. Change third value to plot different attribute in the
 #add_contour function. Create a new figure showing the contour of the cuts.
 '''
 fig = plt.figure(figsize=[8,4])
-mhd_cont.switch_frame(20)
+mhd_cont.switch_frame(11)
 fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'rho', target=fig,loc = 121 ,dolog = True, xlim=[-10,10], ylim=[-10,10],add_cbar=True)
 plt.title('Y=0, Pressure, Single Fluid')
 
@@ -70,7 +70,7 @@ print(mhd['r'])
 #Stream scatter for velocity field
 
 fig = plt.figure(figsize=[10,4])
-mhd_cont.switch_frame(20)
+mhd_cont.switch_frame(11)
 fig, ax, cont, cbar = mhd_cont.add_stream_scatter('ux', 'uz',target = fig, loc = 121,\
                                 xlim=[-10,10], ylim=[-10,10],colors='Gray')
 
@@ -80,7 +80,7 @@ plt.xlabel(r'$R_e$')
 plt.ylabel(r'$R_e$')
 plt.title('Y=0, Streamline Velocity with Radial Velocity', fontsize=10)
 
-mhd_cont.add_pcolor('x','z','ur',zlim=[-400,400],target=ax,add_cbar=True,cmap='coolwarm')
+mhd_cont.add_pcolor('x','z','ur',target=ax,cmap='coolwarm')
 #mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
 
 #%%
