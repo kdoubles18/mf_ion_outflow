@@ -130,8 +130,9 @@ class ShellSlice(IdlFile):
     def add_cont_shell(self, value, radius, irad=0, target=None, loc=111,
                        zlim=None, dolabel=True, add_cbar=False,
                        dofill=True, nlev=51, colat_max=90,
-                       rotate=np.pi/2, dolog=False, direction=False, clabel=None,
-                       latticks=15., yticksize=14, extend='both', **kwargs):
+                       rotate=np.pi/2, dolog=False, direction=False, 
+                       clabel=None,latticks=15., yticksize=14, extend='both',
+                       **kwargs):
         '''
         For slices that cover a full hemisphere or more, create a polar
         plot of variable *value*.
@@ -232,10 +233,10 @@ class ShellSlice(IdlFile):
         ax
         return fig, ax, cnt, cbar
 
-filename = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/MF_20221119_ta/shl_mhd_8_n00005000_00667147.outs'
-SMG_run = ShellSlice(filename, 3)
+filename = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/Run_02_full/shl_mhd_4_n00008000_00951393.outs'
+SMG_run = ShellSlice(filename, 3.0)
 SMG_run.calc_urad()
 SMG_run.calc_radflux('rho')
-SMG_run.switch_frame(44)
-SMG_run.add_cont_shell('rho_rflx', 3, add_cbar=True,clabel='Density flux (Mp/cc)')
-plt.title('Rho Flux at 3 Re')
+SMG_run.switch_frame(18)
+SMG_run.add_cont_shell('rho_rflx', 3.0, add_cbar=True,clabel='Density flux (Mp/cc)')
+plt.title('Rho Flux at 3.0 Re')
