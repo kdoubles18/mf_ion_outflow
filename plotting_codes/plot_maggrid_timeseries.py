@@ -22,8 +22,8 @@ warnings.filterwarnings("ignore",category=MatplotlibDeprecationWarning)
 splot.style('default')
 
 ## Change to match your own directory structure
-directory = '/Users/kdoubles/Data/run_results/run_01_nominal_full/'
-filename = 'mag_grid_n00008000_00872603.outs'
+directory = '//Users/kdoubles/Data/run_results/run_01_full'
+filename = 'mag_grid_n00009569_00225137.outs'
 
 ## Read file, check number of frames.
 mag_grid = bats.MagGridFile('{}/{}'.format(directory,filename))
@@ -80,7 +80,7 @@ for iLat in np.arange(85,171,10): ## start from Equator, do every 10 deg
 ax.legend()
 ax.set_xlabel('Simulation Time [s]')
 ax.set_ylabel('dBh [nT]')
-ax.set_title('Northern Hemisphere')
+ax.set_title('Northern Hemisphere - Nominal')
 plt.savefig('{}/lat_avg_northern.png'.format(directory),dpi=300)
 plt.show()
 plt.close()
@@ -93,26 +93,30 @@ for iLat in np.arange(0,86,10): ## end at Equator, do every 10 deg
 ax.legend()
 ax.set_xlabel('Simulation Time [s]')
 ax.set_ylabel('dBh [nT]')
-ax.set_title('Southern Hemisphere')
+ax.set_title('Southern Hemisphere - Nominal')
 plt.savefig('{}/lat_avg_southern.png'.format(directory),dpi=300)
 #plt.show()
 plt.close()
 
 
 #Some subplot cool stuff
-fig = plt.figure(figsize=[8,16])
-for iLat in np.arange(85.171,10):
-    gs0 = GridSpec(1, 9, figure=fig)
-    for n in range(iLat):   
-        ax0 = fig.add_subplot(gs0[iLat])
-        ax0.plot(mag_grid_dict['time'],
-                np.asarray(mag_grid_dict['lat_avg'])[:,iLat],
-                label = 'Lat = {}'.format(iLat-85))
-        
-plt.show()
-ax0.set_title('Run 02 - dBh, 10 eV Temperature')
-ax0.set_xlabel('Simulation Time [s]')
-ax0.set_ylabel('dBh [nT]')
+fig = plt.figure(figsize=(14,20), constrained_layout=True)
+gs0 = fig.add_gridspec(9,1, figure=fig)
+plt.suptitle('Run 0q - dBh, Nominal',fontsize=20)
+for n in np.arange(0,9):  
+    ax0 = fig.add_subplot(gs0[n])
+    iLat = 10*n + 85 ## or something; I can't test my algebra
+    ax0.plot(mag_grid_dict['times'],
+                 np.asarray(mag_grid_dict['lat_avg'])[:,iLat],
+                 label = 'Lat = {}'.format(iLat-85))
+    ax0.legend()
+
+ax0.set_xlabel('Simulation time [s]',fontsize=20)
+ax0.set_ylabel('dBh [nT]', fontsize=20)
+plt.savefig('{}/lat_avg_N_separated.png'.format(directory),dpi=300)    
+#plt.show()
+plt.close()
+
 
 
 

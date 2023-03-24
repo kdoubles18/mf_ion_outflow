@@ -18,7 +18,7 @@ import spacepy.datamodel as dm
 from spacepy import pybats
 from spacepy.pybats import bats
 
-path_outs = '/Users/kdoubles/Data/run_results/test_run_vpara/y=0_mhd_1_n00000080_00017702.outs'
+path_outs = '/Users/kdoubles/Data/run_results/run_02_full/y=0_mhd_1_n00008000_00951393.outs'
 #%%
 #Reads in the file so Python knows how to plot it
 mhd = pybats.IdlFile(path_outs)
@@ -41,7 +41,7 @@ Set up to plot y=0 cut. Change third value to plot different attribute in the
 #add_contour function. Create a new figure showing the contour of the cuts.
 '''
 fig = plt.figure(figsize=[8,4])
-mhd_cont.switch_frame(11)
+mhd_cont.switch_frame(120)
 fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'rho', target=fig,loc = 121 ,dolog = True, xlim=[-10,10], ylim=[-10,10],add_cbar=True)
 plt.title('Y=0, Pressure, Single Fluid')
 
@@ -70,18 +70,17 @@ print(mhd['r'])
 #Stream scatter for velocity field
 
 fig = plt.figure(figsize=[10,4])
-mhd_cont.switch_frame(11)
+mhd_cont.switch_frame(120)
 fig, ax, cont, cbar = mhd_cont.add_stream_scatter('ux', 'uz',target = fig, loc = 121,\
-                                xlim=[-10,10], ylim=[-10,10],colors='Gray')
+                                xlim=[-5,5], ylim=[-5,5],colors='Gray')
 
-mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
-
+mhd_cont.add_body(DoPlanet=False)
 plt.xlabel(r'$R_e$')
 plt.ylabel(r'$R_e$')
 plt.title('Y=0, Streamline Velocity with Radial Velocity', fontsize=10)
 
-mhd_cont.add_pcolor('x','z','ur',target=ax,cmap='coolwarm')
-#mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
+mhd_cont.add_pcolor('x','z','ur',zlim=[-500,500],target=ax,add_cbar=True,cmap='coolwarm')
+mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
 
 #%%
 mhd_cont.calc_jxb()
@@ -91,8 +90,9 @@ mhd_cont.calc_gradP()
 for i in range(mhd.attrs['nframe']):
     mhd_cont.switch_frame(i)
     fig, ax = plt.subplots(2,2,figsize=[10,10])
+    run_times = mhd_cont.attrs['runtimes'][i]
     
-    fig.suptitle(f"%ith iteration - 3 min interval" %i)
+    fig.suptitle(f"%r s - Simulation Time" %run_times)
     ax[0,0] = mhd_cont.add_contour('x', 'z', 'rho', target=ax[0,0],xlim=[-10,10],ylim=[-10,10],add_cbar=True,title='Density')
     ax[0,1] = mhd_cont.add_contour('x', 'z', 'p', target=ax[0,1],add_cbar=True,clabel=None,xlim=[-10,10],ylim=[-10,10],title='Pressure')
     ax[1,0] = mhd_cont.add_contour('x', 'z', 'jb', target=ax[1,0],add_cbar=True,clabel=None,xlim=[-5,5],ylim=[-5,5],title='J x B')
