@@ -233,10 +233,10 @@ class ShellSlice(IdlFile):
         ax
         return fig, ax, cnt, cbar
 
-filename = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/Run_02_full/shl_mhd_4_n00008000_00951393.outs'
-SMG_run = ShellSlice(filename, 3.0)
+filename = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/Run_01_full/shl_mhd_6_n00008000_00951353.outs'
+SMG_run = ShellSlice(filename, 4.0)
 SMG_run.calc_urad()
 SMG_run.calc_radflux('rho')
 SMG_run.switch_frame(18)
-SMG_run.add_cont_shell('rho_rflx', 3.0, add_cbar=True,clabel='Density flux (Mp/cc)')
-plt.title('Rho Flux at 3.0 Re')
+SMG_run.add_cont_shell('rho_rflx', 4.0, add_cbar=True,clabel='Density flux (Mp/cc)')
+plt.title('Rho Flux at 4.0 Re')

@@ -19,11 +19,11 @@ from matplotlib.gridspec import GridSpec
 warnings.filterwarnings("ignore",category=MatplotlibDeprecationWarning)
 
 ## To make Dan happy or something, idk
-splot.style('default')
+splot.style('altgrid')
 
 ## Change to match your own directory structure
-directory = '//Users/kdoubles/Data/run_results/run_01_full'
-filename = 'mag_grid_n00009569_00225137.outs'
+directory = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/Run_01_full/'
+filename = 'mag_grid_n00008000_00951353.outs'
 
 ## Read file, check number of frames.
 mag_grid = bats.MagGridFile('{}/{}'.format(directory,filename))
@@ -46,6 +46,7 @@ for iFrame in range(nFrame):
     if iFrame % 100 == 0: # avoid screen barf
         print('iFrame: {}'.format(iFrame))
         print('tSimulation: {}'.format(t_sim))
+        print('tSimulation hours: {}'.format(t_hr))
         
     ## Calc dBh
     mag_grid.calc_h()
@@ -58,11 +59,10 @@ for iFrame in range(nFrame):
     #epoch = dt.datetime(YYYY, MM, DD,
     #                    HH, MM, SS, MSC) ## starttime of the run
     #t_sim = epoch + dt.timedelta(seconds=t_sim))
-
+    
     ## Append to lists for plotting
     mag_grid_dict['times'].append(t_sim)
     mag_grid_dict['lat_avg'].append(mag_grid['lat_avg'])
-
 
 ## For testing:
 #print(np.shape(mag_grid['dBh']))
@@ -80,9 +80,9 @@ for iLat in np.arange(85,171,10): ## start from Equator, do every 10 deg
 ax.legend()
 ax.set_xlabel('Simulation Time [s]')
 ax.set_ylabel('dBh [nT]')
-ax.set_title('Northern Hemisphere - Nominal')
-plt.savefig('{}/lat_avg_northern.png'.format(directory),dpi=300)
-plt.show()
+ax.set_title('Northern Hemisphere - 2.1 eV IBC')
+plt.savefig('{}/lat_avg_northern_2_1eV.png'.format(directory),dpi=300)
+#plt.show()
 plt.close()
 
 fig, ax = plt.subplots(figsize=(14,8))
@@ -93,18 +93,18 @@ for iLat in np.arange(0,86,10): ## end at Equator, do every 10 deg
 ax.legend()
 ax.set_xlabel('Simulation Time [s]')
 ax.set_ylabel('dBh [nT]')
-ax.set_title('Southern Hemisphere - Nominal')
-plt.savefig('{}/lat_avg_southern.png'.format(directory),dpi=300)
+ax.set_title('Southern Hemisphere - 2.1 eV IBC')
+plt.savefig('{}/lat_avg_southern_2_1eV.png'.format(directory),dpi=300)
 #plt.show()
 plt.close()
 
 
-#Some subplot cool stuff
+#Some subplot stuff
 fig = plt.figure(figsize=(14,20), constrained_layout=True)
 gs0 = fig.add_gridspec(9,1, figure=fig)
-plt.suptitle('Run 0q - dBh, Nominal',fontsize=20)
+plt.suptitle('Run 01 - dBh, 2.1 eV IBC',fontsize=20)
 for n in np.arange(0,9):  
-    ax0 = fig.add_subplot(gs0[n])
+    ax0 = fig.add_subplot(gs0[n]) 
     iLat = 10*n + 85 ## or something; I can't test my algebra
     ax0.plot(mag_grid_dict['times'],
                  np.asarray(mag_grid_dict['lat_avg'])[:,iLat],
@@ -113,11 +113,9 @@ for n in np.arange(0,9):
 
 ax0.set_xlabel('Simulation time [s]',fontsize=20)
 ax0.set_ylabel('dBh [nT]', fontsize=20)
-plt.savefig('{}/lat_avg_N_separated.png'.format(directory),dpi=300)    
+plt.savefig('{}/lat_avg_N_separated_2_1eV.png'.format(directory),dpi=300)    
 #plt.show()
 plt.close()
-
-
 
 
 
