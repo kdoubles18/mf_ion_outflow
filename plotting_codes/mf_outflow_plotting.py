@@ -211,8 +211,8 @@ plt.close()
 ## plot dBn with rho
 plt.figure()
 plt.plot(log_file['time'],log_file['rho'],label = 'total')
-plt.plot(log_file['time'],log_file['rhosw'],label='sw')
-plt.plot(log_file['time'],log_file['rhoion'],label='ion')
+#plt.plot(log_file['time'],log_file['rhosw'],label='sw')
+#plt.plot(log_file['time'],log_file['rhoion'],label='ion')
 plt.xticks(rotation=45)
 plt.legend()
 ## dB_h / dt 

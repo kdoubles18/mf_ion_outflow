@@ -22,8 +22,8 @@ warnings.filterwarnings("ignore",category=MatplotlibDeprecationWarning)
 splot.style('altgrid')
 
 ## Change to match your own directory structure
-directory = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/Run_01_full/'
-filename = 'mag_grid_n00008000_00951353.outs'
+directory = '/Users/kdoubles/Data/run_results/run_02_full/'
+filename = 'mag_grid_n00008000_00951393.outs'
 
 ## Read file, check number of frames.
 mag_grid = bats.MagGridFile('{}/{}'.format(directory,filename))
@@ -46,10 +46,11 @@ for iFrame in range(nFrame):
     if iFrame % 100 == 0: # avoid screen barf
         print('iFrame: {}'.format(iFrame))
         print('tSimulation: {}'.format(t_sim))
-        print('tSimulation hours: {}'.format(t_hr))
         
     ## Calc dBh
     mag_grid.calc_h()
+
+
 
     ## Average over latitude
     mag_grid['lat_avg'] = np.mean(mag_grid['dBh'], axis=0, dtype=np.float64)
@@ -63,6 +64,14 @@ for iFrame in range(nFrame):
     ## Append to lists for plotting
     mag_grid_dict['times'].append(t_sim)
     mag_grid_dict['lat_avg'].append(mag_grid['lat_avg'])
+
+for iFrame in (2,nFrame-1):
+        
+    t_1 = mag_grid.attrs['runtimes'][iFrame-1]
+    t_2 = mag_grid.attrs['runtimes'][iFrame+1]
+    dt = t_2 - t_1
+    diff_arr = np.append((mag_grid['dBn'][:,:,iFrame-1]-mag_grid['dBn']\
+                          [:,:,iFrame+1])/2*dt)
 
 ## For testing:
 #print(np.shape(mag_grid['dBh']))
