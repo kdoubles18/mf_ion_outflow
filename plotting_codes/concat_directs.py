@@ -33,8 +33,6 @@ def concat_not_interval():
         directory and saved within the parent_direct.
     '''
     
-    directory = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/Run_01_full/'
-    filename = 'mag_grid_n00008000_00951353.outs'    
     
     
     return
