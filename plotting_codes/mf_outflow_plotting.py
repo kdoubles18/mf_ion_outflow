@@ -19,6 +19,7 @@ from matplotlib import MatplotlibDeprecationWarning
 from matplotlib.gridspec import GridSpec
 import argparse as ap
 import os, glob
+#import shell_plotter.py as Shell
 
 def arg_parse_file_location():
     """
@@ -48,6 +49,10 @@ def arg_parse_file_location():
 global file_location
 directory = arg_parse_file_location()
 
+'''
+Convert all files in directory location to usable formats with SpacePy.
+'''
+
 ## Mag Grid File
 for filename in glob.glob((directory.path + '/' +'mag_grid*.outs')):
     mag_grid = bats.MagGridFile(filename)
@@ -59,13 +64,19 @@ for filename in glob.glob((directory.path + '/' +'geo*.log')):
 ## Log File
 for filename in glob.glob((directory.path + '/' +'log*.log')):
     log_file = bats.BatsLog(filename)
+ 
+## Shell Slice
+#for filename in glob.glob((directory.path + '/' +'shl_*.outs')):
+#    shell_file = Shell.ShellSlice(filename)
 
+#Total number of frames.
 nFrame = mag_grid.attrs['nframe']
 print('nFrame: {}'.format(nFrame))
 
-## Dictionary to hold stuff since I'm lazy
-## and rationalizing the familiar is easy
-mag_grid_dict = {'times':[],'lat_avg':[]}
+## Dictionary of needed values.
+mag_grid_dict = {'times':[],'lat_avg':[],'dbdtn':[],'dbdte':[],'dbdth':[]}
+
+dBdth = np.empty((mag_grid['dBn'].shape[0],mag_grid['dBn'].shape[1],nFrame))
 
 ## Iterate through frames in .outs file
 ##  -> could modify to iterate through .out files too
@@ -75,10 +86,7 @@ for iFrame in range(nFrame):
     
     ## get simulation time
     t_sim = mag_grid.attrs['runtimes'][iFrame]
-    
-    ## get dt with second order central difference approximation
 
-    
     if iFrame % 100 == 0: # avoid screen barf
         print('iFrame: {}'.format(iFrame))
         print('tSimulation: {}'.format(t_sim))
@@ -88,30 +96,42 @@ for iFrame in range(nFrame):
 
     ## Average over latitude
     mag_grid['lat_avg'] = np.mean(mag_grid['dBh'], axis=0, dtype=np.float64)
-
-    ## No times were saved in the file you gave me.
-    ## If you want actual times, do this:
-    #epoch = dt.datetime(YYYY, MM, DD,
-    #                    HH, MM, SS, MSC) ## starttime of the run
-    #t_sim = epoch + dt.timedelta(seconds=t_sim))
-    '''
-    dt = np.array([x.total_seconds() for x in np.diff(geo_index['time'])])
-
-    #Central diff
-    mag_grid_dict['dBdtn'][1:-1] = (mag_grid['dBn'][2:]-mag_grid['dBn'][:-2])/ \
-                                    (dt[1:]+dt[:-1])
-    #Forward diff        
-    mag_grid_dict['dBdtn'][0] = (mag_grid['dBn'][2]+4*mag_grid['dBn'][1]- \
-                                    3*mag_grid['dBn'][0])/(dt[1]+dt[0])
-        
-    mag_grid_dict['dBdtn'][-1] = (3*mag_grid['dBn'][-1]-4*mag_grid['dBn'][-2]+ \
-                                  mag_grid['dBn'][-3])/(dt[-1]-dt[-2])
-
-    '''
+    
     ## Append to lists for plotting
     mag_grid_dict['times'].append(t_sim)
     mag_grid_dict['lat_avg'].append(mag_grid['lat_avg'])
+  
+delta_t_0 = mag_grid.attrs['runtimes'][1]+mag_grid.attrs['runtimes'][0]
+dBdth[:,:,0] = (mag_grid['dBh'][2]+4*mag_grid['dBh'][1]-
+                3*mag_grid['dBh'][0])/(delta_t_0)    
+mag_grid_dict['dbdth'].append(dBdth[:,:,0])
 
+#Central difference approximation
+for iFrame in range(1,nFrame-1):
+    t_1 = mag_grid.attrs['runtimes'][iFrame-1]
+    t_2 = mag_grid.attrs['runtimes'][iFrame+1]
+    delta_t = t_2 - t_1
+    
+    if iFrame % 100 == 0: # avoid screen barf
+        print('iFrame: {}'.format(iFrame))
+        print('dbdth size: {}'.format(len(mag_grid_dict['dbdth'])))
+
+    dBdth[:,:,iFrame] = (mag_grid['dBh'][:,:])/(2*delta_t)
+    mag_grid_dict['dbdth'].append(dBdth[:,:,iFrame])
+        
+delta_t_0 = (mag_grid.attrs['runtimes'][nFrame-2]+
+             mag_grid.attrs['runtimes'][nFrame-1])
+dBdth[:,:,-1] = (3*mag_grid['dBh'][-1]-4*mag_grid['dBh'][-2]+
+                 mag_grid['dBh'][-3])/(delta_t_0)    
+mag_grid_dict['dbdth'].append(dBdth[:,:,-1])
+
+for iFrame in range(nFrame):
+    mag_grid['lat_avg_dbdth'] = np.mean(dBdth, axis=0, dtype=np.float64)
+    mag_grid['lon_avg_dbdth'] = np.mean(dBdth, axis=1, dtype=np.float64)
+
+'''
+Begin plotting all the plots I need for analysis.
+'''
 ## Plot Northern Hemisphere
 fig, ax = plt.subplots(figsize=[14,8])
 for iLat in np.arange(85,171,10): ## start from Equator, do every 10 deg
@@ -138,7 +158,6 @@ ax.set_title('Southern Hemisphere - 10 eV IBC')
 plt.savefig('{}/lat_avg_southern_10eV.png'.format(directory.path),dpi=300)
 #plt.show()
 plt.close()
-
 
 #Some subplot stuff
 fig = plt.figure(figsize=(14,20), constrained_layout=True)
@@ -179,7 +198,6 @@ plt.close()
 geo_index.fetch_obs_ae()
 geo_index.fetch_obs_kp()
 
-
 fig = plt.figure(figsize=[8,14],constrained_layout=True)
 gs = GridSpec(3,1, figure=fig)
 ax1 = fig.add_subplot(gs[0,0])
@@ -207,28 +225,24 @@ plt.savefig('{}/gen_'.format(directory.path),dpi=300)
 #plt.show()
 plt.close()
 
-
-## plot dBn with rho
+## plot dBdth
 plt.figure()
-plt.plot(log_file['time'],log_file['rho'],label = 'total')
-#plt.plot(log_file['time'],log_file['rhosw'],label='sw')
-#plt.plot(log_file['time'],log_file['rhoion'],label='ion')
-plt.xticks(rotation=45)
-plt.legend()
+for iLat in np.arange(85,171,10): ## start from Equator, do every 10 deg
+	plt.plot(mag_grid_dict['times'],
+        	np.asarray(mag_grid['lat_avg_dbdth'][iLat,:]),
+                label = 'Lat = {}'.format(iLat-85))
+plt.xlim(1,35999)
+plt.show()
+
 ## dB_h / dt 
 #Adapted from Pulkkinen et al. 2013, where B_x and B_y are B_n and B_e.
 '''
-dt = np.array([x.total_seconds() for x in np.diff(geo_index['time'])])
-
-#Central diff
-mag_grid_dict['dBdtn'][1:-1] = (mag_grid['dBn'][2:]-mag_grid['dBn'][:-2])/ \
-                                (dt[1:]+dt[:-1])
-#Forward diff        
-mag_grid_dict['dBdtn'][0] = (mag_grid['dBn'][2]+4*mag_grid['dBn'][1]- \
-                                3*mag_grid['dBn'][0])/(dt[1]+dt[0])
+    ## No times were saved in the file you gave me.
+    ## If you want actual times, do this:
+    #epoch = dt.datetime(YYYY, MM, DD,
+    #                    HH, MM, SS, MSC) ## starttime of the run
+    #t_sim = epoch + dt.timedelta(seconds=t_sim))
     
-mag_grid_dict['dBdtn'][-1] = (3*mag_grid['dBn'][-1]-4*mag_grid['dBn'][-2]+ \
-                              mag_grid['dBn'][-3])/(dt[-1]-dt[-2])
-
+    #dt = np.array([x.total_seconds() for x in np.diff(geo_index['time'])])
 
 '''

@@ -15,6 +15,7 @@ from spacepy import pybats
 from spacepy.pybats import bats, rim, IdlFile, calc_wrapper
 import spacepy.datamodel as dm
 from spacepy.plot import set_target, applySmartTimeTicks
+import matplotlib.pyplot as plt
 
 
 class ShellSlice(IdlFile):
@@ -233,10 +234,22 @@ class ShellSlice(IdlFile):
         ax
         return fig, ax, cnt, cbar
 
-filename = '/Users/kdoubles/Data/Outflow_Runs/Run_Dates/Run_01_full/shl_mhd_6_n00008000_00951353.outs'
-SMG_run = ShellSlice(filename, 4.0)
-SMG_run.calc_urad()
-SMG_run.calc_radflux('rho')
-SMG_run.switch_frame(18)
-SMG_run.add_cont_shell('rho_rflx', 4.0, add_cbar=True,clabel='Density flux (Mp/cc)')
-plt.title('Rho Flux at 4.0 Re')
+pathname = '/Users/kdoubles/Downloads/drive-download-20230403T171443Z-001/'
+filename = 'shl_mhd_6_n00008000_00319711.outs'
+
+shell_file = ShellSlice(pathname+filename, 4.0)
+shell_file.calc_urad()
+shell_file.calc_radflux('rho')
+nFrame = shell_file.attrs['nframe']
+shell_file_dict = {'nFrame': [], 'fluence': []}
+for iFrame in range(0,nFrame):
+    shell_file.switch_frame(iFrame)
+
+    plt.figure()
+    fig = shell_file.add_cont_shell('rho_rflx', 4.0, add_cbar=True,clabel='Density flux (Mp/cc)')
+
+shell_file.calc_radflu('rho')
+shell_file_dict['fluence'].append(shell_file['rho_rflu'])
+
+
+    
