@@ -1,0 +1,391 @@
+#COMPONENTMAP		For production run
+GM  0 -3 -1  -1		CompMap 0:nProc-3 multithreaded
+IE -2 -1  1  		CompMap last 2 PE-s
+
+#ECHO
+T
+
+#DESCRIPTION
+MF3 Outflow Sensitivity Study Setup Param
+
+#TIMEACCURATE
+F                       DoTimeAccurate
+
+#IDEALAXES
+
+#STARTTIME
+2000            year
+01              month
+01              day
+00              hour
+00              minute
+00              second
+0.0             FracSecond
+
+#COUPLE2
+GM                      NameComp1
+IE                      NameComp2
+10                      DnCouple
+-1.0                    DtCouple
+
+#BEGIN_COMP GM ---------------------------------------------------------------
+
+#GRIDBLOCKALL
+100000			MaxBlock
+
+#GRID
+1			nRootBlock_D(x_)
+1			nRootBlock_D(y_)
+1			nRootBlock_D(z_)
+-224.			x1
+ 32.			x2
+-128.			y1
+ 128.			y2
+-128.			z1
+ 128.			z2
+
+! Maximum resolution initially
+#GRIDRESOLUTION
+1.0			Resolution
+initial			NameArea
+
+! Minimum resolution in the computational domain
+#GRIDRESOLUTION
+8.0			Resolution
+all			NameArea
+
+! Far tail for wind satellite and inflow
+#GRIDRESOLUTION
+1.0			Resolution
+box			NameArea
+-100.0			xMinBox
+ -16.0			yMinBox
+ -16.0			zMinBox
+  32.0			xMaxBox
+  16.0			yMaxBox
+  16.0			xMaxBox
+
+! Super high at inner boundary
+! to capture outflow patterns.
+#GRIDRESOLUTION
+1/16
+box
+-4.0                   xMinBox
+-4.0                   yMinBox
+-4.0                   zMinBox
+ 4.0                   xMaxBox
+ 4.0                   yMaxBox
+ 4.0                   zMaxBox
+
+! Strong resolution just outside
+! super-hi for clean outflow.
+#GRIDRESOLUTION
+1/8
+box
+-8.0                   xMinBox
+-8.0                   yMinBox
+-8.0                   zMinBox
+ 8.0                   xMaxBox
+ 8.0                   yMaxBox
+ 8.0                   zMaxBox
+
+! Good res throughout lobes.
+#GRIDRESOLUTION
+1/4
+box
+-32.0                  xMinBox
+-16.0                   yMinBox
+-16.0                   zMinBox
+ 12.0                   xMaxBox
+ 16.0                   yMaxBox
+ 16.0                   zMaxBox
+
+! 1/2 RE buffer around inner mag.
+#GRIDRESOLUTION
+1/2			Resolution
+box			NameArea
+-40.0			xMinBox
+-24.0			yMinBox
+-24.0			zMinBox
+ 24.0			xMaxBox
+ 24.0			yMaxBox
+ 24.0			zMaxBox
+
+#BODY
+T                       UseBody (rest of parameters read if true)
+2.5                     rBody (user units)
+3.0                     rCurrents (only read for GM component)
+28.0                    BodyNDim (/cc) for fluid 1
+25000.0                 BodyTDim (K)   for fluid 1
+
+#NONCONSERVATIVE
+T                       UseNonConservative
+
+#CONSERVATIVECRITERIA
+1			nConservCrit
+parabola		TypeConservCrit_I
+5.0			xParabolaConserv
+15.0			yParabolaConserv
+
+#TIMESTEPPING
+1			nStage
+0.80			CflExlp
+
+#OUTERBOUNDARY
+outflow			TypeBC_I(east_)
+vary			TypeBC_I(west_)
+float			TypeBC_I(south_)
+float			TypeBC_I(north_)
+float			TypeBC_I(bot_)
+float			TypeBC_I(top_)
+
+#INNERBOUNDARY
+polarwind
+
+#POLARBOUNDARY
+20.0			PolarNDim [amu/cc]	for fluid 1
+25000.0			PolarTDim [K]		for fluid 1
+50.0			PolarUDim [km/s]	for fluid 1
+75.0			PolarLatitude [deg]
+
+#SCHEME
+1			nOrder
+Sokolov			TypeFlux
+mc3			TypeLimiter
+1.2			BetaLimiter
+
+#SAVEPLOTSAMR
+F			DoSavePlotsAmr to save plots before each AMR
+
+#AMR
+100			DnRefine
+F			DoAutomaticRefinement 
+
+#UPSTREAM_INPUT_FILE
+T                       UseUpstreamInputFile
+imf_ideal.dat     UpstreamFileName
+0.0                     Satellite_Y_Pos
+0.0                     Satellite_Z_Pos
+
+#SAVELOGFILE
+T			DoSaveLogfile
+VAR			StringLogfile
+-1			DnSaveLogfile
+5.0			DtSaveLogfile
+dt rho mx my mz p bx by bz pmin pmax rhoflx dst dstdivb dstflx
+3.0 3.5 5.0		StringRFlux
+
+#GEOMAGINDICES
+180			nSizeKpWindow [min]
+1 min			DtOutput      [sec]
+
+#MAGNETOMETERGRID
+real8			TypeFileMagGrid
+GEO			TypeCoordMagGrid
+360			nLonMagGrid
+171			nLatMagGrid
+0.			LonMinMagGrid
+360.			LonMaxMagGrid
+-85.			LatMinMagGrid
+85.			LatMaxMagGrid
+-1			DnSaveMagGrid
+60.			DtSaveMagGrid
+
+#END_COMP GM -----------------------------------------------------------------
+
+#BEGIN_COMP IE ---------------------------------------------------------------
+
+#IONOSPHERE
+5                       TypeConductanceModel
+F                       UseFullCurrent
+F                       UseFakeRegion2
+100.0                   F107Flux
+1.0                     StarLightPedConductance
+0.25                    PolarCapPedConductance
+
+#AURORALOVAL
+T			UseOval (rest of parameters read if true)
+T			UseOvalShift
+F			UseSubOvalConductance
+T			UseAdvancedOval
+F			DoFitCircle (read if UseAdvancedOval is true)
+
+#BOUNDARY
+10.0			LatBoundary
+
+#END_COMP IE -----------------------------------------------------------------
+
+#STOP
+2000                    MaxIter
+-1.                     TimeMax
+
+#RUN    ######################################################################
+
+#BEGIN_COMP GM ---------------------------------------------------------------
+
+#SAVERESTART                                                     
+T                       DoSaveRestart
+2000                    DnSaveRestart
+-1                  	DtSaveRestart
+
+AMR
+F			DnRefine
+
+#SCHEME
+1			nORDER
+Sokolov			TypeFlux
+mc3                     TypeLimiter
+1.2
+
+#TIMESTEPPING
+2			nStage
+0.60			CflExlp
+
+#BORIS
+T
+0.02
+
+#END_COMP GM -----------------------------------------------------------------
+
+#STOP
+8000                    MaxIter
+-1.                     TimeMax
+
+#RUN ##########################################################################
+
+#TIMEACCURATE
+T			IsTimeAccurate
+
+#PROGRESS
+100			DnProgressShort
+1000			DnProgressLong
+
+#SAVERESTART                                                     
+T                       DoSaveRestart
+-1                      DnSaveRestart
+1800.0                  DtSaveRestart
+
+#COUPLEORDER
+2			nCouple
+IE GM			NameSourceTarget
+GM IE			NameSourceTarget
+
+#COUPLE2
+GM			NameComp1
+IE			NameComp2
+-1                      DnCouple
+5.0                     DtCouple
+
+#COUPLETIME
+GM			NameComp
+F			DoCoupleOnTime
+
+#BEGIN_COMP GM ---------------------------------------------------------------
+
+#SCHEME
+2			nORDER
+Rusanov			TypeFlux
+mc3                     TypeLimiter
+1.2			BetaLimiter
+
+#BORIS
+T			UseBorisCorrection
+0.01			BorisClightFactor
+
+#REGION
+borisregion		NameRegion
+sphere tapered		StringShape
+-4.0			xPosition
+0.0			yPosition
+0.0			zPosition
+14.0			Radius
+2.0			Taper
+
+#BORISREGION
+borisregion		NameBorisRegion
+
+#TIMESTEPPING
+1			nStage
+0.85			CflExpl
+
+#SAVEPLOT
+6                       nPlotFiles
+y=0 MHD idl             StringPlot
+-1                      DnSavePlot
+300.			DtSavePlot
+-1
+z=0 MHD idl             StringPlot
+-1                      DnSavePlot
+300.			DtSavePlot
+-1			
+shl MHD idl
+-1			DnSavePlot
+1800.			DtSavePlot
+SMG			TypeCoordPlot
+2.7			rMin
+2.7			rMax
+0.			LonMin
+360.			LonMax
+10.			dLon
+-90.			LatMin
+90.			LatMax
+10.			dLat
+shl MHD idl
+-1			DnSavePlot
+1800.			DtSavePlot
+SMG			TypeCoordPlot
+3.0			rMin
+3.0			rMax
+0.			LonMin
+360.			LonMax
+10.			dLon
+-90.			LatMin
+90.			LatMax
+10.			dLat
+shl MHD idl
+-1			DnSavePlot
+1800.			DtSavePlot
+SMG			TypeCoordPlot
+3.5			rMin
+3.5			rMax
+0.			LonMin
+360.			LonMax
+10.			dLon
+-90.			LatMin
+90.			LatMax
+10.			dLat
+shl MHD idl
+-1			DnSavePlot
+1800.			DtSavePlot
+SMG			TypeCoordPlot
+4.0			rMin
+4.0			rMax
+0.			LonMin
+360.			LonMax
+10.			dLon
+-90.			LatMin
+90.			LatMax
+10.			dLat
+
+#END_COMP GM -----------------------------------------------------------------
+
+#BEGIN_COMP IE ---------------------------------------------------------------
+
+#SAVEPLOT
+1			nPlotFile
+max idl			StringPlot
+-1			DnSavePlot
+1 min			DtSavePlot
+
+#END_COMP IE -----------------------------------------------------------------
+
+#ENDTIME
+2000            year
+01              month
+01              day
+10              hour
+00              minute
+00              second
+0.0             FracSecond
+
+END ############################################################
