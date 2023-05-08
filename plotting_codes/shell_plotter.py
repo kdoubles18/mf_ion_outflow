@@ -16,6 +16,7 @@ from spacepy.pybats import bats, rim, IdlFile, calc_wrapper
 import spacepy.datamodel as dm
 from spacepy.plot import set_target, applySmartTimeTicks
 import matplotlib.pyplot as plt
+import os, glob
 
 
 class ShellSlice(IdlFile):
@@ -114,7 +115,6 @@ class ShellSlice(IdlFile):
 
         # Make sure flux exists:
         if flux not in self: self.calc_radflux(var)
-        if flu in self: return
 
         # Create output container, one point per radial distance:
         self[flu] = np.zeros( self['grid'][0] )
@@ -126,7 +126,6 @@ class ShellSlice(IdlFile):
                 (R* 6371.0)**2 * self[flux][i,:,:] * \
                 np.sin(self.theta[i,:,:])  * \
                 self.dtheta * self.dphi * 1000.**2 )
-
 
     def add_cont_shell(self, value, radius, irad=0, target=None, loc=111,
                        zlim=None, dolabel=True, add_cbar=False,
@@ -234,10 +233,12 @@ class ShellSlice(IdlFile):
         ax
         return fig, ax, cnt, cbar
 
-pathname = '/Users/kdoubles/Downloads/drive-download-20230403T171443Z-001/'
-filename = 'shl_mhd_6_n00008000_00319711.outs'
+pathname = '/Users/kdoubles/Data/outflow_runs/run_dates/run_5kms_IBC_sf/'
+filename = 'shl_mhd_4_n00008000_01432140.outs'
+magfile = 'mag_grid_n00008000_01432140.outs'
 
-shell_file = ShellSlice(pathname+filename, 4.0)
+shell_file = ShellSlice(pathname+filename, 3.0)
+mag_file = bats.MagGridFile(pathname+magfile)
 shell_file.calc_urad()
 shell_file.calc_radflux('rho')
 nFrame = shell_file.attrs['nframe']
@@ -246,10 +247,15 @@ for iFrame in range(0,nFrame):
     shell_file.switch_frame(iFrame)
 
     plt.figure()
-    fig = shell_file.add_cont_shell('rho_rflx', 4.0, add_cbar=True,clabel='Density flux (Mp/cc)')
+    fig = shell_file.add_cont_shell('rho_rflx', 3.0, add_cbar=True,
+                                    clabel='Density flux (Mp/cc)')
+    plt.close()
+    shell_file.calc_radflu('rho')
+    shell_file_dict['fluence'].append(shell_file['rho_rflu'])
 
-shell_file.calc_radflu('rho')
-shell_file_dict['fluence'].append(shell_file['rho_rflu'])
 
-
-    
+plt.figure()
+plt.plot(shell_file.attrs['runtimes'],shell_file_dict['fluence'])
+plt.yscale('log')
+plt.xlabel('Simulation time, [s]')
+plt.ylabel('Fluence, [particles*m/s]')

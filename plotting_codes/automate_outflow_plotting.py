@@ -21,6 +21,7 @@ from spacepy.pybats import bats
 import warnings
 from matplotlib import MatplotlibDeprecationWarning
 from matplotlib.gridspec import GridSpec
+from matplotlib import gridspec
 import argparse as ap
 import os, glob
 
@@ -71,6 +72,12 @@ for filename in glob.glob((directory.path + '/' +'geo*.log')):
 for filename in glob.glob((directory.path + '/' +'log*.log')):
     log_file = bats.BatsLog(filename)
 
+for filename in glob.glob((directory.path + '/' + 'y*.outs')):
+    y_2d = bats.Bats2d(filename)
+    
+for filename in glob.glob((directory.path + '/' + 'z*.outs')):
+    z_2d = bats.Bats2d(filename)
+    
 nFrame = mag_grid.attrs['nframe']
 print('nFrame: {}'.format(nFrame))
 
@@ -86,6 +93,9 @@ for iFrame in range(nFrame):
     
     ## get simulation time
     t_sim = mag_grid.attrs['runtimes'][iFrame]
+    
+    epoch = dt.datetime(2000, 1, 1, 0, 0, 0, 0)
+    times = epoch + dt.timedelta(seconds=t_sim)
     
     if iFrame % 100 == 0: # avoid screen barf
         print('iFrame: {}'.format(iFrame))
@@ -170,7 +180,7 @@ isExist = os.path.exists(directory.path + '/plots/')
 if not isExist:
 
    # Create a new directory because it does not exist
-   os.mkdirs(directory.path + '/plots/')
+   os.mkdir(directory.path + '/plots/')
 
 ## Calc dBh
 geo_index.fetch_obs_ae()
@@ -200,10 +210,9 @@ ax3.tick_params(rotation=30)
 
 plt.suptitle('Geo Indexes - 5 amu IBC Single Fluid')
 
-plt.savefig('{}/gen_indexes'.format(directory.path),dpi=300) 
+plt.savefig('{}/plots/gen_indexes'.format(directory.path),dpi=300) 
 #plt.show()
 plt.close()
-
 
 ## plot dBn with rho
 plt.figure()
@@ -212,7 +221,6 @@ plt.plot(log_file['time'],log_file['rho'],label = 'total')
 #plt.plot(log_file['time'],log_file['rhoion'],label='ion')
 plt.xticks(rotation=45)
 plt.legend()
-
 
 marker = ["8","o","s","H","X","D","*","d",">"]
 ## Plot Northern Hemisphere dBh
@@ -315,6 +323,41 @@ max20 = []
 for i in range(int(np.shape(mag_grid_dict['times'])[0]/mask_di)):
     max20.append(max(mag_grid_dict['dBhdt_point']
                      [int(i*mask_di):int((i+1)*mask_di)]))     
+
+## These additional plots are produced when prompted question is answered 'y'.
+if is_multi == True:
+    #Plot all the .out files in the y=0 or z=0 outputs.
+    grid=gridspec.GridSpec(2,2)
+
+    for i in range(y_2d.attrs['nframe']):
+        y_2d.switch_frame(i)
+        fig, ax = plt.subplots(2,2,sharey=True, sharex=True, figsize=[10,10])
+        
+        #fig = mhd_cont.add_contour('x', 'z', 'oprho', target = fig, loc = 121, dolog = True,\
+        #                                add_cbar=True, xlim=[-50,20], ylim=[-30,30],cmap='viridis')
+        t_now = y_2d.attrs['time']
+        fig.suptitle('{}th iteration - {} '.format(i,times))
+        ax[0,0] = y_2d.add_contour('x', 'z', 'opp', target=ax[0,0],
+                                   xlim=[-20,20],ylim=[-20,20],add_cbar=True,
+                                   title='Op Pressure')
+        ax[0,1] = y_2d.add_contour('x', 'z', 'p', target=ax[0,1],
+                                   add_cbar=True,clabel=None, xlim=[-20,20],
+                                   ylim=[-20,20],title='Pressure')
+        ax[1,0] = y_2d.add_contour('x', 'z', 'oprho', target=ax[1,0],
+                                   add_cbar=True,clabel=None,
+                                   xlim=[-20,20],ylim=[-20,20],
+                                   zlim=[0,30],title='Op Density')
+        ax[1,1] = y_2d.add_contour('x', 'z', 'rho', target=ax[1,1],
+                                   add_cbar=True,clabel=None,xlim=[-20,20],
+                                   ylim=[-20,20],zlim=[0,30],title='Density')
+
+if is_multi == False:
+    for i in range(y_2d.attrs['nframe']):
+        y_2d.switch_frame(i)
+        fig, ax = y_2d.add_contour('x', 'z', 'rho',xlim=[-20,20],ylim=[-20,20],
+                                   add_cbar=True,
+                                   title='Density, {}'.format(times))
+
 '''
 ## Plot dBh at a point
 fig, ax = plt.subplots(figsize=(14,8))

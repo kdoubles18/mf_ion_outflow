@@ -80,18 +80,15 @@ for filename in glob.glob((directory.path + '/' +'log*.log')):
 nFrame = mag_grid.attrs['nframe']
 print('nFrame: {}'.format(nFrame))
 
-<<<<<<< HEAD
 ## Dictionary of needed values.
 mag_grid_dict = {'times':[],'lat_avg':[],'dbdtn':[],'dbdte':[],'dbdth':[]}
 
 dBdth = np.empty((mag_grid['dBn'].shape[0],mag_grid['dBn'].shape[1],nFrame))
 
-=======
 ## Dictionary to hold stuff since I'm lazy
 ## and rationalizing the familiar is easy
 mag_grid_dict = {'times':[],
                  'dBh':[],'dBh_lat_avg':[]}
->>>>>>> 3ecf3d8 (updating code to allow input naming process)
 ## Iterate through frames in .outs file
 ##  -> could modify to iterate through .out files too
 for iFrame in range(nFrame):
@@ -151,20 +148,7 @@ for iFrame in range(nFrame):
 '''
 Begin plotting all the plots I need for analysis.
 '''
-## Plot Northern Hemisphere
-fig, ax = plt.subplots(figsize=[14,8])
-for iLat in np.arange(85,171,10): ## start from Equator, do every 10 deg
-	ax.plot(mag_grid_dict['times'],
-        	np.asarray(mag_grid_dict['lat_avg'])[:,iLat],
-                label = 'Lat = {}'.format(iLat-85))
-ax.legend()
-ax.set_xlabel('Simulation Time [s]')
-ax.set_ylabel('dBh [nT]')
-ax.set_title('Northern Hemisphere - 10 eV IBC')
-plt.savefig('{}/lat_avg_northern_10eV.png'.format(directory.path),dpi=300)
-#plt.show()
-plt.close()
-=======
+
     mag_grid_dict['dBh'].append(mag_grid['dBh'])
     
     ## Compute latitude-averaged dBh
@@ -204,7 +188,6 @@ mag_grid_dict['dBhdt_lat_avg'] = []
 for i,timestamp in enumerate(mag_grid_dict['times']):
     mag_grid_dict['dBhdt_lat_avg'].append(np.mean(mag_grid_dict['dBhdt'][i],
                                                   axis=0, dtype=np.float64))
->>>>>>> 3ecf3d8 (updating code to allow input naming process)
 
 ## Compute dBh/dt at a point.
 ## Arbitrarily select Fairbanks, AK [65,-148]
@@ -238,7 +221,6 @@ for i, timestamp in enumerate(mag_grid_dict['times']):
         dT = mag_grid_dict['times'][i+1] - mag_grid_dict['times'][i-1]
         mag_grid_dict['dBhdt_point'].append(dBh/dT)
 
-<<<<<<< HEAD
 #Some subplot stuff
 fig = plt.figure(figsize=(14,20), constrained_layout=True)
 gs0 = fig.add_gridspec(9,1, figure=fig)
@@ -250,14 +232,13 @@ for n in np.arange(0,9):
                  np.asarray(mag_grid_dict['lat_avg'])[:,iLat],
                  label = 'Lat = {}'.format(iLat-85))
     ax0.legend()
-=======
+
 #Make new folder for plots to be stored in
 isExist = os.path.exists(directory.path + '/plots/')
 if not isExist:
 
    # Create a new directory because it does not exist
    os.mkdirs(directory.path + '/plots/')
->>>>>>> 3ecf3d8 (updating code to allow input naming process)
 
 ## Calc dBh
 geo_index.fetch_obs_ae()
@@ -292,7 +273,6 @@ plt.close()
 
 ## plot dBdth
 plt.figure()
-<<<<<<< HEAD
 for iLat in np.arange(85,171,10): ## start from Equator, do every 10 deg
 	plt.plot(mag_grid_dict['times'],
         	np.asarray(mag_grid['lat_avg_dbdth'][iLat,:]),
@@ -300,6 +280,19 @@ for iLat in np.arange(85,171,10): ## start from Equator, do every 10 deg
 plt.xlim(1,35999)
 plt.show()
 
+## Plot Northern Hemisphere
+fig, ax = plt.subplots(figsize=[14,8])
+for iLat in np.arange(85,171,10): ## start from Equator, do every 10 deg
+	ax.plot(mag_grid_dict['times'],
+        	np.asarray(mag_grid_dict['lat_avg'])[:,iLat],
+                label = 'Lat = {}'.format(iLat-85))
+ax.legend()
+ax.set_xlabel('Simulation Time [s]')
+ax.set_ylabel('dBh [nT]')
+ax.set_title('Northern Hemisphere - 10 eV IBC')
+plt.savefig('{}/lat_avg_northern_10eV.png'.format(directory.path),dpi=300)
+#plt.show()
+plt.close()
 ## dB_h / dt 
 #Adapted from Pulkkinen et al. 2013, where B_x and B_y are B_n and B_e.
 '''
@@ -311,7 +304,6 @@ plt.show()
     
     #dt = np.array([x.total_seconds() for x in np.diff(geo_index['time'])])
 
-=======
 plt.plot(log_file['time'],log_file['rho'],label = 'total')
 #plt.plot(log_file['time'],log_file['rhosw'],label='sw')
 #plt.plot(log_file['time'],log_file['rhoion'],label='ion')
@@ -454,5 +446,4 @@ ax.set_title('Location: [{},{}]'.format(lat,lon))
 plt.savefig('{}/dbhdt_mask.png'.format(directory),dpi=300)
 plt.show()
 plt.close()
->>>>>>> 3ecf3d8 (updating code to allow input naming process)
 '''
