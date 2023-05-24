@@ -53,7 +53,7 @@ def arg_parse_file_location():
 
     return args
 
-if input("Is this multifluid (y/n)") != "y":
+if input("Is this a multifluid run? (y/n) ") != "y":
     is_multi = False
 
 global file_location
@@ -74,6 +74,7 @@ for filename in glob.glob((directory.path + '/' +'log*.log')):
 
 for filename in glob.glob((directory.path + '/' + 'y*.outs')):
     y_2d = bats.Bats2d(filename)
+    y_idl = bats.IdlFile(filename)
     
 for filename in glob.glob((directory.path + '/' + 'z*.outs')):
     z_2d = bats.Bats2d(filename)
@@ -186,7 +187,6 @@ if not isExist:
 geo_index.fetch_obs_ae()
 geo_index.fetch_obs_kp()
 
-
 fig = plt.figure(figsize=[8,14],constrained_layout=True)
 gs = GridSpec(3,1, figure=fig)
 ax1 = fig.add_subplot(gs[0,0])
@@ -221,6 +221,7 @@ plt.plot(log_file['time'],log_file['rho'],label = 'total')
 #plt.plot(log_file['time'],log_file['rhoion'],label='ion')
 plt.xticks(rotation=45)
 plt.legend()
+plt.close()
 
 marker = ["8","o","s","H","X","D","*","d",">"]
 ## Plot Northern Hemisphere dBh
@@ -322,8 +323,37 @@ mask_di = mask_minutes*60/dt_seconds # indices in one mask
 max20 = []
 for i in range(int(np.shape(mag_grid_dict['times'])[0]/mask_di)):
     max20.append(max(mag_grid_dict['dBhdt_point']
-                     [int(i*mask_di):int((i+1)*mask_di)]))     
+                     [int(i*mask_di):int((i+1)*mask_di)]))  
 
+y_2d['r']  = np.sqrt(y_2d['x']**2+y_2d['z']**2)
+y_2d['phi'] = 0
+y_2d['theta'] = np.cos(y_2d['z']/np.sqrt(y_2d['x']**2+y_2d['z']**2))**(-1)
+'''
+Calculate radial velocity.
+
+
+ur = y_idl['Ux']*np.sin(y_idl['theta'])*np.cos(y_idl['phi']) + \
+   y_idl['Uy']*np.sin(y_idl['theta'])*np.sin(y_idl['phi']) + \
+   y_idl['Uz']*np.cos(y_idl['theta'])
+
+y_idl['ur'] = dm.dmarray(ur, {'units':y_idl['Ux'].attrs['units']})
+
+print(y_idl['r'])
+
+#Stream scatter for velocity field
+
+fig = plt.figure(figsize=[10,4])
+y_2d.switch_frame(600)
+fig, ax, cont, cbar = y_2d.add_stream_scatter('ux', 'uz',target = fig, loc = 121,\
+                                xlim=[-10,10], ylim=[-10,10],colors='Gray')
+
+#mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
+
+plt.xlabel(r'$R_e$')
+plt.ylabel(r'$R_e$')
+plt.title('Y=0, Streamline Velocity with Radial Velocity', fontsize=10)
+'''
+'''
 ## These additional plots are produced when prompted question is answered 'y'.
 if is_multi == True:
     #Plot all the .out files in the y=0 or z=0 outputs.
@@ -336,7 +366,7 @@ if is_multi == True:
         #fig = mhd_cont.add_contour('x', 'z', 'oprho', target = fig, loc = 121, dolog = True,\
         #                                add_cbar=True, xlim=[-50,20], ylim=[-30,30],cmap='viridis')
         t_now = y_2d.attrs['time']
-        fig.suptitle('{}th iteration - {} '.format(i,times))
+        fig.suptitle('{}th iteration - {} '.format(i,t_now))
         ax[0,0] = y_2d.add_contour('x', 'z', 'opp', target=ax[0,0],
                                    xlim=[-20,20],ylim=[-20,20],add_cbar=True,
                                    title='Op Pressure')
@@ -354,10 +384,12 @@ if is_multi == True:
 if is_multi == False:
     for i in range(y_2d.attrs['nframe']):
         y_2d.switch_frame(i)
-        fig, ax = y_2d.add_contour('x', 'z', 'rho',xlim=[-20,20],ylim=[-20,20],
-                                   add_cbar=True,
+        fig, ax,  cont, cbar = y_2d.add_contour('x', 'z', 'rho',xlim=[-20,20],
+                                                ylim=[-20,20],add_cbar=True,
                                    title='Density, {}'.format(times))
-
+        plt.savefig('{}/plots/dens_contour_{}'.format(directory.path,directory.runname),dpi=300)    
+        plt.close()
+'''
 '''
 ## Plot dBh at a point
 fig, ax = plt.subplots(figsize=(14,8))

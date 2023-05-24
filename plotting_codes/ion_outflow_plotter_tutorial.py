@@ -18,7 +18,7 @@ from matplotlib.gridspec import GridSpec
 from spacepy import pybats
 from spacepy.pybats import bats
 
-path_outs = '/Users/kdoubles/Downloads/drive-download-20230403T171817Z-001/y=0_mhd_1_n00000100_00321530.outs'
+path_outs = '/Users/kdoubles/Data/run_gridcheck_hres/GM/y=0_mhd_1_e20140410-000000-000_20140410-001500-005.outs'
 #%%
 #Reads in the file so Python knows how to plot it
 mhd = pybats.IdlFile(path_outs)
@@ -32,7 +32,7 @@ mhd_cont.calc_b()
 
 #Plot grid resolution of run
 print(mhd_cont['rho'].mean())
-mhd_cont.switch_frame(180)
+mhd_cont.switch_frame(3)
 fig, ax = mhd_cont.add_grid_plot()
 
 #%%
@@ -41,8 +41,11 @@ Set up to plot y=0 cut. Change third value to plot different attribute in the
 #add_contour function. Create a new figure showing the contour of the cuts.
 '''
 fig = plt.figure(figsize=[8,4])
-mhd_cont.switch_frame(180)
-fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'rho', target=fig,loc = 121 ,dolog = True, xlim=[-10,10], ylim=[-10,10],add_cbar=True)
+mhd_cont.switch_frame(120)
+fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'rho', target=fig,
+                                           loc = 121 ,dolog = True, 
+                                           xlim=[-10,10], ylim=[-10,10],
+                                           add_cbar=True)
 plt.title('Y=0, Density, Single Fluid')
 
 
@@ -64,31 +67,35 @@ ur = mhd['Ux']*np.sin(mhd['theta'])*np.cos(mhd['phi']) + \
    mhd['Uz']*np.cos(mhd['theta'])
 
 mhd_cont['ur'] = dm.dmarray(ur, {'units':mhd['Ux'].attrs['units']})
-
-print(mhd['r'])
 #%%
 #Stream scatter for velocity field
 
 fig = plt.figure(figsize=[10,4])
-mhd_cont.switch_frame(170)
-fig, ax, cont, cbar = mhd_cont.add_stream_scatter('ux', 'uz',target = fig, loc = 121,\
-                                xlim=[-10,10], ylim=[-10,10],colors='Gray')
+mhd_cont.switch_frame(120)
+
+#fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'ur', target=fig,
+#                                           loc = 121,dolog = True, 
+#                                           xlim=[-10,10], ylim=[-10,10],
+#                                           add_cbar=True,cmap='coolwarm')
+
+fig, ax, cont, cbar = mhd_cont.add_stream_scatter('ux', 'uz',target = fig, loc = 121,
+                            xlim=[-10,10], ylim=[-10,10],colors='Gray')
 
 #mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
+mhd_cont.add_pcolor('x','z','ur',target=ax,add_cbar=True,cmap='coolwarm',zlim=[-400,400])
+plt.Circle((0,0),3.0,fill=False)
+
 
 plt.xlabel(r'$R_e$')
 plt.ylabel(r'$R_e$')
 plt.title('Y=0, Streamline Velocity with Radial Velocity', fontsize=10)
-#%%
-mhd_cont.add_pcolor('x','z','ur',target=ax,add_cbar=True,cmap='coolwarm')
-#mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
 
 #%%
 mhd_cont.calc_jxb()
 mhd_cont.calc_gradP()
 
 #%%
-for i in np.arange(130,mhd_cont.attrs['nframe'],5):
+for i in np.arange(100,mhd_cont.attrs['nframe'],5):
     mhd_cont.switch_frame(i)
     fig, ax = plt.subplots(2,2,figsize=[10,10])
     t = mhd_cont.attrs['runtimes'][i]

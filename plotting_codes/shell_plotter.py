@@ -15,7 +15,10 @@ from spacepy import pybats
 from spacepy.pybats import bats, rim, IdlFile, calc_wrapper
 import spacepy.datamodel as dm
 from spacepy.plot import set_target, applySmartTimeTicks
+from matplotlib.gridspec import GridSpec
+from matplotlib import gridspec
 import matplotlib.pyplot as plt
+import argparse as ap
 import os, glob
 
 
@@ -198,7 +201,7 @@ class ShellSlice(IdlFile):
         # Plot against colatitude to arrange results correctly.
         cnt = func(self.phi[irad,:,:]+rotate, 90-self.lat[irad,:,:],
                    np.array(z), levs, norm=norm,
-                   extend=extend, **kwargs,cmap='bwr')
+                   extend=extend, **kwargs)
 
         # Add cbar if necessary.
         if add_cbar:
@@ -233,29 +236,100 @@ class ShellSlice(IdlFile):
         ax
         return fig, ax, cnt, cbar
 
-pathname = '/Users/kdoubles/Data/outflow_runs/run_dates/run_5kms_IBC_sf/'
-filename = 'shl_mhd_4_n00008000_01432140.outs'
-magfile = 'mag_grid_n00008000_01432140.outs'
 
-shell_file = ShellSlice(pathname+filename, 3.0)
-mag_file = bats.MagGridFile(pathname+magfile)
+def arg_parse_file_location():
+    """
+    A parser that allows the user to type in the path of the file that they 
+    want to process. User must input path and file name if file is not in same
+    working directory as this script.
+        
+    Args
+    ------
+    path_name (str): 
+        Name of path to the directory of the data.
+            
+    Return
+    -------
+    Arguments for the file and the path. 
+    
+    """
+    
+    parser = ap.ArgumentParser(description = 'Read in path name')
+    parser.add_argument('-path', help = 'The path for the file. Default \
+                        directory of this script.', type = str, \
+                            default = 'None')
+    parser.add_argument('-runname', help = 'This is the name of the run. \
+                        Default is "None".', type = str, \
+                            required = True)
+    args = parser.parse_args()
+
+    return args
+
+if input("Is this a multifluid run? (y/n) ") != "y":
+    is_multi = False
+
+global file_location
+directory = arg_parse_file_location()
+run_name = directory.runname
+radius = '30'
+for filename in glob.glob((directory.path + '/' +'shl_mhd_4*.outs')):
+    shell_file = ShellSlice(filename, 3.0)
+
 shell_file.calc_urad()
 shell_file.calc_radflux('rho')
 nFrame = shell_file.attrs['nframe']
+
 shell_file_dict = {'nFrame': [], 'fluence': []}
+
+#Make new folder for plots to be stored in
+isExist = os.path.exists(directory.path + '/plots/')
+if not isExist:
+
+   # Create a new directory because it does not exist
+   os.mkdir(directory.path + '/plots/')
+
 for iFrame in range(0,nFrame):
     shell_file.switch_frame(iFrame)
 
     plt.figure()
     fig = shell_file.add_cont_shell('rho_rflx', 3.0, add_cbar=True,
-                                    clabel='Density flux (Mp/cc)')
-    plt.close()
+                                    clabel='Density flux (Mp/cc)',cmap='PRGn')
     shell_file.calc_radflu('rho')
     shell_file_dict['fluence'].append(shell_file['rho_rflu'])
+    t_now = shell_file.attrs['runtime']
+    t_now_hr = t_now/3600
+    plt.title('Density Flux, {} hr simulation time, {} - {}'.format(t_now_hr,run_name,radius))
+    plt.savefig('{}/plots/shl_slice_{}'.format(directory.path,iFrame), dpi=300)
+    plt.close()
 
-
-plt.figure()
+plt.figure(figsize=[8,4])
 plt.plot(shell_file.attrs['runtimes'],shell_file_dict['fluence'])
 plt.yscale('log')
 plt.xlabel('Simulation time, [s]')
 plt.ylabel('Fluence, [particles*m/s]')
+plt.title('Fluence - {}'.format(run_name))
+plt.savefig('{}/plots/fluence_time_series_IBC_log_{}'.format(directory.path,radius),dpi=300)
+plt.close()
+
+plt.figure(figsize=[8,4])
+plt.plot(shell_file.attrs['runtimes'],shell_file_dict['fluence'])
+plt.xlabel('Simulation time, [s]')
+plt.ylabel('Fluence, [particles*m/s]')
+plt.title('Fluence - {}'.format(run_name))
+plt.savefig('{}/plots/fluence_time_series_IBC_{}'.format(directory.path,radius),dpi=300)
+plt.close()
+
+if is_multi == True:
+    grid=gridspec.GridSpec(2,1)
+    for i in range(shell_file.attrs['nframe']):
+        shell_file.switch_frame(i)
+        fig, ax = plt.subplots(2,2,sharey=True, sharex=True, figsize=[10,10])
+    
+        ax[0,0] = shell_file.add_cont_shell('rho_hp', target=ax[0,0],
+                               xlim=[-20,20],ylim=[-20,20],add_cbar=True,
+                               title='H+ Density')
+        ax[1,0] = shell_file.add_cont_shell('rho_op', target=ax[1,0],
+                               add_cbar=True,clabel=None, xlim=[-20,20],
+                               ylim=[-20,20],title='O+ Density')
+    
+    
