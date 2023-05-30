@@ -294,7 +294,7 @@ for iFrame in range(0,nFrame):
     plt.figure()
     fig = shell_file.add_cont_shell('rho_rflx', 3.0, add_cbar=True,
                                     clabel='Density flux (Mp/cc)',cmap='PRGn')
-    shell_file.calc_radflu('rho')
+    shell_file.calc_radflu('hprho')
     shell_file_dict['fluence'].append(shell_file['rho_rflu'])
     t_now = shell_file.attrs['runtime']
     t_now_hr = t_now/3600
