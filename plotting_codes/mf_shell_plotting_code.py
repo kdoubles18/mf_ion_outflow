@@ -25,7 +25,7 @@ import os, glob
 
 class ShellSlice(IdlFile):
     
-    def __init__(self, filename, format='binary', *args, **kwargs):
+    def __init__(self, filename, radius, format='binary', *args, **kwargs):
 
         from spacepy.pybats import parse_filename_time
 
@@ -57,8 +57,20 @@ class ShellSlice(IdlFile):
         #self['x']= self.r*np.sin(self.lat)*np.cos(self.lon)
         #self['y']= self.r*np.sin(self.lat)*np.sin(self.lon)
         #self['z'] = self.r*np.cos(self.lat)
-        
 
+    @calc_wrapper
+    def calc_urad(self):
+        '''
+        Calculate radial velocity.
+        '''
+
+        ur = self['ux']*np.sin(self.theta)*np.cos(self.phi) + \
+             self['uy']*np.sin(self.theta)*np.sin(self.phi) + \
+             self['uz']*np.cos(self.theta)
+
+        self['ur'] = dm.dmarray(ur, {'units':self['ux'].attrs['units']})
+
+    @calc_wrapper
     def calc_radflux(self, var, conv=1000.*(100.0)**3):
         '''
         For variable *var*, calculate the radial flux of *var* through each
@@ -220,8 +232,8 @@ class ShellSlice(IdlFile):
     def arg_parse_file_location():
         """
         A parser that allows the user to type in the path of the file that they 
-        want to process. User must input path and file name if file is not in same
-        working directory as this script.
+        want to process. User must input path and file name if file is not in 
+        same working directory as this script.
             
         Args
         ------
@@ -249,11 +261,111 @@ global file_location
 directory = ShellSlice.arg_parse_file_location()
 run_name = directory.runname
 
-if input("Is this a multifluid run? (y/n) ") != "y":
-       is_multi = False
+print('passes global')
 
-radius = '30'
-shell_file_dict = {'shell_file':[],'r_file':[],'shell_slice':[]}
-for filename in glob.glob((directory.path + '/' +'shl_mhd*.outs')):
+if input("Is this a multifluid run? (y/n) ") != "y":
+    is_multi = False
+    print('Multi is False')
+else:
+    is_multi = True
+    print('Multi is True')
+
+                   'fluence_hp':[],'fluence_op':[],'fluence_sw':[]}
+shell_file_dict = {'shell_file':[],'r_file':[],'shell_slice':[],'nFrame':[],
+shell_file_dict['r_file'] = [2.7,3.0,3.5,4.0]
+for filename in glob.glob((directory.path + '/' +'shl_mhd_4*.outs')):
     shell_file_dict['shell_file'].append(filename)
-    shell_file_dict['shell_slice'].append(ShellSlice(shell_file_dict['shell_file']))
+    shell_file_dict['shell_slice'].append(
+        ShellSlice(shell_file_dict['shell_file'][0],3.0))
+
+isExist = os.path.exists(directory.path + '/plots/')
+if not isExist:
+
+   # Create a new directory because it does not exist
+   os.mkdir(directory.path + '/plots/')
+
+
+shell_file = shell_file_dict['shell_slice'][0]
+nFrame = shell_file.attrs['nframe']
+shell_file.calc_urad()
+shell_file.calc_radflux('hprho')
+for iFrame in range(0,nFrame):
+    shell_file.switch_frame(iFrame)
+
+    plt.figure()
+    fig = shell_file.add_cont_shell('hprho_rflx', 3.0, add_cbar=True,
+                                    clabel='Density flux (Mp/cc)',cmap='PRGn')
+    shell_file.calc_radflu('hprho')
+    shell_file_dict['fluence_hp'].append(shell_file['hprho_rflu'])
+    t_now = shell_file.attrs['runtime']
+    t_now_hr = t_now/3600
+    plt.title('Hp Density Flux, {} hr simulation time, {} - 3.0'.format(
+        t_now_hr,run_name))
+    plt.savefig('{}/plots/shl_slice_hprho_{}'.format(directory.path,iFrame), 
+                dpi=300)
+    plt.close()
+
+shell_file['oprho_rflx'] = shell_file['oprho'] * shell_file['ur'] * \
+    (1000*(100)**3)
+#shell_file.calc_radflux('oprho')
+
+for iFrame in range(0,nFrame):
+    shell_file.switch_frame(iFrame)
+
+    plt.figure()
+    fig = shell_file.add_cont_shell('oprho_rflx', 3.0, add_cbar=True,
+                                    clabel='Density flux (Mp/cc)',cmap='PRGn')
+    shell_file.calc_radflu('oprho')
+    shell_file_dict['fluence_op'].append(shell_file['oprho_rflu'])
+    t_now = shell_file.attrs['runtime']
+    t_now_hr = t_now/3600
+    plt.title('Op Density Flux, {} hr simulation time, {} - 3.0'.format(
+        t_now_hr,run_name))
+    plt.savefig('{}/plots/shl_slice_oprho_{}'.format(directory.path,iFrame), 
+                dpi=300)
+    plt.close()
+
+
+shell_file['rho_rflx'] = shell_file['rho'] * shell_file['ur'] * (1000*(100)**3)
+
+for iFrame in range(0,nFrame):
+    shell_file.switch_frame(iFrame)
+
+    plt.figure()
+    fig = shell_file.add_cont_shell('rho_rflx', 3.0, add_cbar=True,
+                                    clabel='Density flux (Mp/cc)',cmap='PRGn')
+    shell_file.calc_radflu('rho')
+    shell_file_dict['fluence_sw'].append(shell_file['rho_rflu'])
+    t_now = shell_file.attrs['runtime']
+    t_now_hr = t_now/3600
+    plt.title('Sw Density Flux, {} hr simulation time, {} - 3.0'.format(
+        t_now_hr,run_name))
+    plt.savefig('{}/plots/shl_slice_rho_{}'.format(directory.path,iFrame), 
+                dpi=300)
+    plt.close()
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

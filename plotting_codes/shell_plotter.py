@@ -275,11 +275,8 @@ radius = '30'
 for filename in glob.glob((directory.path + '/' +'shl_mhd_4*.outs')):
     shell_file = ShellSlice(filename, 3.0)
 
-shell_file.calc_urad()
-shell_file.calc_radflux('rho')
 nFrame = shell_file.attrs['nframe']
-
-shell_file_dict = {'nFrame': [], 'fluence': []}
+shell_file_dict = {'nFrame': [], 'fluence': [], 'ur': [], 'temp_hp': []}
 
 #Make new folder for plots to be stored in
 isExist = os.path.exists(directory.path + '/plots/')
@@ -290,35 +287,95 @@ if not isExist:
 
 for iFrame in range(0,nFrame):
     shell_file.switch_frame(iFrame)
-
+    shell_file.calc_urad()
+    shell_file.calc_radflux('rho')
     plt.figure()
-    fig = shell_file.add_cont_shell('rho_rflx', 3.0, add_cbar=True,
+    fig = shell_file.add_cont_shell('rho_rflx', 2.7, add_cbar=True,
                                     clabel='Density flux (Mp/cc)',cmap='PRGn')
-    shell_file.calc_radflu('hprho')
+    shell_file.calc_radflu('rho')
     shell_file_dict['fluence'].append(shell_file['rho_rflu'])
+    shell_file_dict['ur'].append(shell_file['ur'])
     t_now = shell_file.attrs['runtime']
     t_now_hr = t_now/3600
-    plt.title('Density Flux, {} hr simulation time, {} - {}'.format(t_now_hr,run_name,radius))
+    plt.title('Density Flux, {} hr simulation time, {}'.format(
+        t_now_hr,run_name))
     plt.savefig('{}/plots/shl_slice_{}'.format(directory.path,iFrame), dpi=300)
     plt.close()
 
+#Plot the fluence across the runtime in log scale
 plt.figure(figsize=[8,4])
 plt.plot(shell_file.attrs['runtimes'],shell_file_dict['fluence'])
 plt.yscale('log')
 plt.xlabel('Simulation time, [s]')
 plt.ylabel('Fluence, [particles*m/s]')
 plt.title('Fluence - {}'.format(run_name))
-plt.savefig('{}/plots/fluence_time_series_IBC_log_{}'.format(directory.path,radius),dpi=300)
+plt.savefig('{}/plots/fluence_time_series_IBC_log_{}'.format(directory.path,
+                                                             radius),dpi=300)
 plt.close()
 
+#Plot the fluence across the runtime with liear scale
 plt.figure(figsize=[8,4])
 plt.plot(shell_file.attrs['runtimes'],shell_file_dict['fluence'])
 plt.xlabel('Simulation time, [s]')
 plt.ylabel('Fluence, [particles*m/s]')
 plt.title('Fluence - {}'.format(run_name))
-plt.savefig('{}/plots/fluence_time_series_IBC_{}'.format(directory.path,radius),dpi=300)
+plt.savefig('{}/plots/fluence_time_series_IBC_{}'.format(directory.path,
+                                                         radius),dpi=300)
 plt.close()
 
+#Plotting the density, parallel velocity, and temperature for each run
+for iFrame in range(nFrame):
+    shell_file.switch_frame(iFrame)
+
+    plt.figure()
+    fig = shell_file.add_cont_shell('rho', 3.0, add_cbar=True,
+                                    clabel='Density [Mp/cc]',cmap='YlGn',
+                                    zlim=[shell_file['rho'][iFrame].min(),
+                                          shell_file['rho'][iFrame].max()])
+    t_now = shell_file.attrs['runtime']
+    t_now_hr = t_now/3600
+    plt.title('Density, {} hr simulation time, {}'.format(
+        t_now_hr,run_name))
+    plt.savefig('{}/plots/dens_contour_{}_{}'.format(directory.path,iFrame,
+                                                     radius), dpi=300)
+    plt.close()
+
+for iFrame in range(nFrame):
+    shell_file.switch_frame(iFrame)
+    plt.figure()
+    fig = shell_file.add_cont_shell('ur', 3.0, add_cbar=True,
+                                    clabel='Radial Velocity, [km/s]',
+                                    cmap='bwr',
+                                    zlim=[-1*shell_file_dict['ur'][iFrame].max(),
+                                          shell_file_dict['ur'][iFrame].max()])
+    t_now = shell_file.attrs['runtime']
+    t_now_hr = t_now/3600
+    plt.title('Radial Velocity [km/s], {} hr simulation time, {}'.format(
+        t_now_hr,run_name))
+    plt.savefig('{}/plots/v_para_contour_{}_{}'.format(directory.path,iFrame,
+                                                       radius), dpi=300)
+    plt.close()
+
+for iFrame in range(0,nFrame):
+    shell_file.switch_frame(iFrame)
+    shell_file['temp_hp'] = (shell_file_dict['ur'][iFrame]/14.1)**2
+    shell_file_dict['temp_hp'].append(shell_file['temp_hp'])
+    print("Temp Hp appended at frame: {}".format(iFrame))
+
+    plt.figure()
+    fig = shell_file.add_cont_shell('temp_hp', 3.0, add_cbar=True,
+                                    clabel='Temperature, [eV]',cmap='cividis',
+                                    zlim=[shell_file_dict['temp_hp'][iFrame].min(),
+                                          shell_file_dict['temp_hp'][iFrame].max()])
+    t_now = shell_file.attrs['runtime']
+    t_now_hr = t_now/3600
+    plt.title('Temperature, {} hr simulation time, {}'.format(t_now_hr,
+                                                            run_name))
+    plt.savefig('{}/plots/temp_contour_{}_{}'.format(directory.path,iFrame,
+                                                     radius), dpi=300)
+    plt.close()
+
+'''
 if is_multi == True:
     grid=gridspec.GridSpec(2,1)
     for i in range(shell_file.attrs['nframe']):
@@ -331,5 +388,5 @@ if is_multi == True:
         ax[1,0] = shell_file.add_cont_shell('rho_op', target=ax[1,0],
                                add_cbar=True,clabel=None, xlim=[-20,20],
                                ylim=[-20,20],title='O+ Density')
-    
-    
+'''   
+
