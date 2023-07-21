@@ -18,7 +18,7 @@ from matplotlib.gridspec import GridSpec
 from spacepy import pybats
 from spacepy.pybats import bats
 
-path_outs = '/Volumes/hard_drive_mac/run_data/run_nominal_IBC_sf/GM/y=0_mhd_1_n00008000_00951401.outs'
+path_outs = '/Users/kdoubles/Data/outflow_runs/run_dates/run_9010comp_IBC_mf_2/GM/y=0_mhd_1_n00002000_00648287.outs'
 #%%
 #Reads in the file so Python knows how to plot it
 mhd = pybats.IdlFile(path_outs)
@@ -32,7 +32,7 @@ mhd_cont.calc_b()
 
 #Plot grid resolution of run
 print(mhd_cont['rho'].mean())
-mhd_cont.switch_frame(0)
+mhd_cont.switch_frame(38)
 fig, ax = mhd_cont.add_grid_plot()
 
 #%%
@@ -41,7 +41,7 @@ Set up to plot y=0 cut. Change third value to plot different attribute in the
 #add_contour function. Create a new figure showing the contour of the cuts.
 '''
 fig = plt.figure(figsize=[8,4])
-mhd_cont.switch_frame(120)
+mhd_cont.switch_frame(38)
 fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'rho', target=fig,
                                            loc = 121 ,dolog = False, 
                                            xlim=[-10,10], ylim=[-10,10],
@@ -71,7 +71,7 @@ mhd_cont['ur'] = dm.dmarray(ur, {'units':mhd['Ux'].attrs['units']})
 #Stream scatter for velocity field
 
 fig = plt.figure(figsize=[10,4])
-mhd_cont.switch_frame(120)
+mhd_cont.switch_frame(38)
 
 #fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'ur', target=fig,
 #                                           loc = 121,dolog = True, 
@@ -80,10 +80,10 @@ mhd_cont.switch_frame(120)
 
 fig, ax, cont, cbar = mhd_cont.add_stream_scatter('ux', 'uz',target = fig, loc = 121,
                             xlim=[-5,5], ylim=[-5,5],colors='Gray')
-
+fig = plt.Circle((0,0),3.0,fill=False)
 #mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
-mhd_cont.add_pcolor('x','z','ur',target=ax,add_cbar=True,cmap='bwr',zlim=[-85,85])
-plt.Circle((0,0),3.0,fill=False)
+mhd_cont.add_pcolor('x','z','ur',target=ax,add_cbar=True,cmap='coolwarm',
+                    zlim=[-mhd_cont['ur'].max(),mhd_cont['ur'].max()])
 
 
 plt.xlabel(r'$R_e$')
@@ -95,16 +95,16 @@ mhd_cont.calc_jxb()
 mhd_cont.calc_gradP()
 
 #%%
-for i in np.arange(100,mhd_cont.attrs['nframe'],5):
+for i in np.arange(0,mhd_cont.attrs['nframe']):
     mhd_cont.switch_frame(i)
     fig, ax = plt.subplots(2,2,figsize=[10,10])
     t = mhd_cont.attrs['runtimes'][i]
     
     fig.suptitle(f"%i simulation time" %t)
-    ax[0,0] = mhd_cont.add_contour('x', 'z', 'rho', target=ax[0,0],xlim=[-10,10],ylim=[-10,10],add_cbar=True,title='Density')
-    ax[0,1] = mhd_cont.add_contour('x', 'z', 'rhosw', target=ax[0,1],add_cbar=True,clabel=None,xlim=[-10,10],ylim=[-10,10],title='Rho Sw')
-    ax[1,0] = mhd_cont.add_contour('x', 'z', 'rhoion', target=ax[1,0],add_cbar=True,clabel=None,xlim=[-10,10],ylim=[-10,10],title='Rho Iono')
-    ax[1,1] = mhd_cont.add_contour('x', 'z', 'p', target=ax[1,1],add_cbar=True,clabel=None,xlim=[-10,10],ylim=[-10,10],title='Pressure')
+    ax[0,0] = mhd_cont.add_contour('x', 'z', 'rho', target=ax[0,0],xlim=[-10,10],ylim=[-10,10],add_cbar=True,title='SW Rho')
+    ax[0,1] = mhd_cont.add_contour('x', 'z', 'hprho', target=ax[0,1],add_cbar=True,clabel=None,xlim=[-10,10],ylim=[-10,10],title='Hp Rho')
+    ax[1,0] = mhd_cont.add_contour('x', 'z', 'oprho', target=ax[1,0],add_cbar=True,clabel=None,xlim=[-10,10],ylim=[-10,10],title='Op Rho')
+    ax[1,1] = mhd_cont.add_contour('x', 'z', 'ur', target=ax[1,1],add_cbar=True,clabel=None,xlim=[-10,10],ylim=[-10,10],title='Radial velocity')
     fig.tight_layout()
 
 

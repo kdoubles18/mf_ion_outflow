@@ -265,14 +265,16 @@ def arg_parse_file_location():
 
     return args
 
+is_multi = True
 if input("Is this a multifluid run? (y/n) ") != "y":
     is_multi = False
+    print(is_multi)
 
 global file_location
 directory = arg_parse_file_location()
 run_name = directory.runname
-radius = '30'
-for filename in glob.glob((directory.path + '/' +'shl_mhd_4*.outs')):
+radius = '35'
+for filename in glob.glob((directory.path + '/' +'shl_mhd_4*.out*')):
     shell_file = ShellSlice(filename, 3.0)
 
 nFrame = shell_file.attrs['nframe']
@@ -291,7 +293,7 @@ for iFrame in range(0,nFrame):
     shell_file.calc_radflux('rho')
     plt.figure()
     fig = shell_file.add_cont_shell('rho_rflx', 2.7, add_cbar=True,
-                                    clabel='Density flux (Mp/cc)',cmap='PRGn')
+                                    clabel='Density flux (Mp/cc)',cmap='bwr')
     shell_file.calc_radflu('rho')
     shell_file_dict['fluence'].append(shell_file['rho_rflu'])
     shell_file_dict['ur'].append(shell_file['ur'])
@@ -375,18 +377,52 @@ for iFrame in range(0,nFrame):
                                                      radius), dpi=300)
     plt.close()
 
-'''
-if is_multi == True:
-    grid=gridspec.GridSpec(2,1)
-    for i in range(shell_file.attrs['nframe']):
-        shell_file.switch_frame(i)
-        fig, ax = plt.subplots(2,2,sharey=True, sharex=True, figsize=[10,10])
-    
-        ax[0,0] = shell_file.add_cont_shell('rho_hp', target=ax[0,0],
-                               xlim=[-20,20],ylim=[-20,20],add_cbar=True,
-                               title='H+ Density')
-        ax[1,0] = shell_file.add_cont_shell('rho_op', target=ax[1,0],
-                               add_cbar=True,clabel=None, xlim=[-20,20],
-                               ylim=[-20,20],title='O+ Density')
-'''   
+print(is_multi)
 
+if is_multi == True:
+    for iFrame in range(0,shell_file.attrs['nframe']):
+        shell_file.switch_frame(iFrame)    
+        grid = gridspec.GridSpec(1,2)
+        fig = plt.figure(figsize=(12,8))
+        fig.subplots_adjust(wspace = 1,hspace = 1)
+        ax1, ax2 = fig.add_subplot(grid[0,0], polar=True),\
+            fig.add_subplot(grid[0,1], polar=True)
+        
+        ax1 = shell_file.add_cont_shell('hprho', 3.0, add_cbar=True,
+                            target=ax1,zlim=[-shell_file['hprho'][iFrame].max(),
+                            shell_file['hprho'][iFrame].max()])
+        ax2 = shell_file.add_cont_shell('oprho', 3.0, add_cbar=True,
+                            target = ax2, zlim=[-shell_file['oprho'][iFrame].max(),
+                                 shell_file['oprho'][iFrame].max()])
+        #plt.suptitle('{} ,Multifluid Outflow Plots, 3 Re'.format(
+        #    directory.runname, radius))
+        fig.tight_layout()
+        plt.savefig('{}/plots/density_mf_{}_{}'.format(directory.path,iFrame,
+                                                         radius), dpi=300)
+        plt.close()
+         
+    for iFrame in range(shell_file.attrs['nframe']):
+        shell_file.switch_frame(iFrame)
+        shell_file.calc_radflux('hprho')
+
+        shell_file['hprho_rflx'] = shell_file['hprho'] * shell_file['ur'] *\
+            1000.*(100.0)**3
+
+        shell_file['oprho_rflx'] = (shell_file['oprho'] * shell_file['ur'] *\
+            1000.*(100.0)**3)/16
+        
+        grid = gridspec.GridSpec(1,2)
+        fig = plt.figure(figsize=(12,8))
+        fig.subplots_adjust(wspace = 1,hspace = 1)
+        ax1, ax2 = fig.add_subplot(grid[0,0], polar=True),\
+            fig.add_subplot(grid[0,1], polar=True)
+        
+        ax1 = shell_file.add_cont_shell('hprho_rflx', 3.0, add_cbar=True,
+                            target=ax1,zlim=[-1e13,1e13],cmap='bwr')
+        ax2 = shell_file.add_cont_shell('oprho_rflx', 3.0, add_cbar=True,
+                            target = ax2,zlim=[-1e12,1e12],cmap='bwr')
+        #plt.suptitle('{} ,Multifluid Outflow Plots, 3 Re'.format(
+        #    directory.runname, radius))
+        plt.savefig('{}/plots/shell_slice_mf_{}_{}'.format(directory.path,iFrame,
+                                                         radius), dpi=300)
+        plt.close()
