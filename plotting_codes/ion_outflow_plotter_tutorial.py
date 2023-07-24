@@ -18,7 +18,7 @@ from matplotlib.gridspec import GridSpec
 from spacepy import pybats
 from spacepy.pybats import bats
 
-path_outs = '/Users/kdoubles/Data/outflow_runs/run_dates/run_9010comp_IBC_mf_2/GM/y=0_mhd_1_n00002000_00648287.outs'
+path_outs = '/Users/kdoubles/Data/run_results/run_9010comp_mf_uf/GM/y=0_mhd_1_n00000800_00929362.outs'
 #%%
 #Reads in the file so Python knows how to plot it
 mhd = pybats.IdlFile(path_outs)
@@ -32,7 +32,7 @@ mhd_cont.calc_b()
 
 #Plot grid resolution of run
 print(mhd_cont['rho'].mean())
-mhd_cont.switch_frame(38)
+mhd_cont.switch_frame(88)
 fig, ax = mhd_cont.add_grid_plot()
 
 #%%
@@ -41,8 +41,8 @@ Set up to plot y=0 cut. Change third value to plot different attribute in the
 #add_contour function. Create a new figure showing the contour of the cuts.
 '''
 fig = plt.figure(figsize=[8,4])
-mhd_cont.switch_frame(38)
-fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'rho', target=fig,
+mhd_cont.switch_frame(88)
+fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'oprho', target=fig,
                                            loc = 121 ,dolog = False, 
                                            xlim=[-10,10], ylim=[-10,10],
                                            add_cbar=True)
@@ -71,16 +71,16 @@ mhd_cont['ur'] = dm.dmarray(ur, {'units':mhd['Ux'].attrs['units']})
 #Stream scatter for velocity field
 
 fig = plt.figure(figsize=[10,4])
-mhd_cont.switch_frame(38)
+mhd_cont.switch_frame(88)
 
 #fig, ax, cont, cbar = mhd_cont.add_contour('x', 'z', 'ur', target=fig,
-#                                           loc = 121,dolog = True, 
-#                                           xlim=[-10,10], ylim=[-10,10],
+#                                           loc = 121, 
+#                                           xlim=[-20,20], ylim=[-20,20],
 #                                           add_cbar=True,cmap='coolwarm')
 
 fig, ax, cont, cbar = mhd_cont.add_stream_scatter('ux', 'uz',target = fig, loc = 121,
-                            xlim=[-5,5], ylim=[-5,5],colors='Gray')
-fig = plt.Circle((0,0),3.0,fill=False)
+                            xlim=[-10,10], ylim=[-10,10],colors='Gray')
+#fig = plt.Circle((0,0),3.0,fill=False)
 #mhd_cont.add_b_magsphere(target=ax,colors='Black',DoLast=False)
 mhd_cont.add_pcolor('x','z','ur',target=ax,add_cbar=True,cmap='coolwarm',
                     zlim=[-mhd_cont['ur'].max(),mhd_cont['ur'].max()])

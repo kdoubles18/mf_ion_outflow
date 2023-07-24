@@ -411,18 +411,24 @@ if is_multi == True:
         shell_file['oprho_rflx'] = (shell_file['oprho'] * shell_file['ur'] *\
             1000.*(100.0)**3)/16
         
-        grid = gridspec.GridSpec(1,2)
-        fig = plt.figure(figsize=(12,8))
+        t_now = shell_file.attrs['runtime']
+        t_now_hr = t_now/3600
+            
+        grid = gridspec.GridSpec(1,3)
+        fig = plt.figure(figsize=(20,10))
         fig.subplots_adjust(wspace = 1,hspace = 1)
-        ax1, ax2 = fig.add_subplot(grid[0,0], polar=True),\
-            fig.add_subplot(grid[0,1], polar=True)
+        ax1, ax2, ax3 = fig.add_subplot(grid[0,0], polar=True),\
+            fig.add_subplot(grid[0,1], polar=True), \
+                fig.add_subplot(grid[0,2], polar=True)
         
         ax1 = shell_file.add_cont_shell('hprho_rflx', 3.0, add_cbar=True,
                             target=ax1,zlim=[-1e13,1e13],cmap='bwr')
         ax2 = shell_file.add_cont_shell('oprho_rflx', 3.0, add_cbar=True,
-                            target = ax2,zlim=[-1e12,1e12],cmap='bwr')
-        #plt.suptitle('{} ,Multifluid Outflow Plots, 3 Re'.format(
-        #    directory.runname, radius))
+                            target = ax2,zlim=[-1e13,1e13],cmap='bwr')
+        ax3 = shell_file.add_cont_shell('rho_rflx', 3.0, add_cbar=True,
+                            target=ax3,zlim=[-1e11,1e11],cmap='bwr')
+        plt.suptitle('{} ,Multifluid Outflow Plots, 3 Re - {} hours'.format(
+            directory.runname, t_now_hr))
         plt.savefig('{}/plots/shell_slice_mf_{}_{}'.format(directory.path,iFrame,
                                                          radius), dpi=300)
         plt.close()
