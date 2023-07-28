@@ -273,7 +273,7 @@ if input("Is this a multifluid run? (y/n) ") != "y":
 global file_location
 directory = arg_parse_file_location()
 run_name = directory.runname
-radius = '35'
+radius = '30'
 for filename in glob.glob((directory.path + '/' +'shl_mhd_4*.out*')):
     shell_file = ShellSlice(filename, 3.0)
 
@@ -415,8 +415,8 @@ if is_multi == True:
         t_now_hr = t_now/3600
             
         grid = gridspec.GridSpec(1,3)
-        fig = plt.figure(figsize=(18,8))
-        fig.subplots_adjust(wspace = 0,hspace = 2)
+        fig = plt.figure(figsize=(24,8))
+        fig.subplots_adjust(wspace = 1,hspace = 2)
         ax1, ax2, ax3 = fig.add_subplot(grid[0,0], polar=True),\
             fig.add_subplot(grid[0,1], polar=True), \
                 fig.add_subplot(grid[0,2], polar=True)
