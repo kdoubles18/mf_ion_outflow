@@ -67,23 +67,22 @@ if input("Is this a multifluid run? (y/n) ") != "y":
 global file_location
 directory = arg_parse_file_location()
 run_name = directory.runname
-
-'''    
+   
 #Read in the y=0 .outs
-for filename in glob.glob((directory.path + '/' + 'y*.outs')):
+for filename in glob.glob((directory.path + 'GM/' + 'y*.outs')):
     y_2d = bats.Bats2d(filename)
     y_idl = bats.IdlFile(filename)
 
 #Make new folder for plots to be stored in
-isExist = os.path.exists(directory.path + '/plots/')
+isExist = os.path.exists(directory.path + 'GM/' + 'plots/')
 if not isExist:
 
    # Create a new directory because it does not exist
-   os.mkdir(directory.path + '/plots/')
+   os.mkdir(directory.path + 'GM/' +'/plots/')
          
 #Density for the three types of fluids for this run. All three are in a single
 #plot together.
-for i in range(0,y_2d.attrs['nframe'],y_2d.attrs['nframe']):
+for i in range(0,y_2d.attrs['nframe']):
     y_2d.switch_frame(i)
     grid = gridspec.GridSpec(3,1)
     fig = plt.figure(figsize=(4,12))
@@ -109,7 +108,7 @@ for i in range(0,y_2d.attrs['nframe'],y_2d.attrs['nframe']):
     plt.suptitle('Y=0, Density of Fluid Types - \
                  {}'.format(t_now_hr), fontsize=10)
     
-    plt.savefig('{}/plots/y0_dens_{}'.format(directory.path,i), dpi=300)
+    plt.savefig('{}/GM/plots/y0_dens_{}'.format(directory.path,i), dpi=300)
     plt.close()
     print('plotting frame: {}'.format(i))
 
@@ -123,10 +122,9 @@ ur = y_2d['ux']*np.sin(y_2d['theta'])*np.cos(y_2d['phi']) + \
    y_2d['uy']*np.sin(y_2d['theta'])*np.sin(y_2d['phi']) + \
    y_2d['uz']*np.cos(y_2d['theta'])
 y_2d['ur'] = dm.dmarray(ur, {'units':y_2d['ux'].attrs['units']})
-'''
-'''
+
 #Read in the log file for dst and cpcpn
-for filename in glob.glob((directory.path + '/' + 'log*.log')):
+for filename in glob.glob((directory.path + 'GM/' + 'log*.log')):
     log_file = bats.LogFile(filename)
 
 #Plot dst vs time.
@@ -136,7 +134,7 @@ plt.ylabel('Dst')
 plt.xlabel('Time, t, [s]')
 plt.title('Dst & Time')
 fig.autofmt_xdate(rotation=45)
-plt.savefig('{}/plots/dst_time'.format(directory.path), dpi=300)
+plt.savefig('{}/GM/plots/dst_time'.format(directory.path), dpi=300)
 plt.close()
 #plot cpcpn vs time.
 fig = plt.figure(figsize=(4,4))
@@ -145,22 +143,22 @@ plt.ylabel('Cpcp')
 plt.xlabel('Time, t, [s]')
 plt.title('Cpcp & Time')
 fig.autofmt_xdate(rotation=45)
-plt.savefig('{}/plots/cpcp_time'.format(directory.path), dpi=300)
+plt.savefig('{}/GM/plots/cpcp_time'.format(directory.path), dpi=300)
 plt.close()
-'''
+
 #If no folder of plots exists in /IE/ subfolder, then this will make one.
-isExist = os.path.exists(directory.path + 'IE/plots/')
+isExist = os.path.exists(directory.path + 'IE/' + 'plots/')
 if not isExist:
 
    # Create a new directory because it does not exist
-   os.mkdir(directory.path + '/IE/plots/')
+   os.mkdir(directory.path +'IE/' +'plots/')
 
 #dictionary for iono files and time associated with file.
 iono_file_dict = {'iono_file':[],'time':[]}
 
 #find all the files in the /IE/ folder and read them in as a Pybats object,
 #then appead them to the dictionary.
-for filename in glob.glob((directory.path + 'IE/' + '*.idl')):
+for filename in glob.glob((directory.path + '/IE/' + '*.idl')):
     #Print if you want to see that it works 
     print('read file: {}'.format(filename))
     iono = rim.Iono(filename)
@@ -169,6 +167,7 @@ for filename in glob.glob((directory.path + 'IE/' + '*.idl')):
 
 #plotting all the iono files in the dictionary, not sorted out by time.
 for i in enumerate(iono_file_dict['iono_file']):
+    sorted(iono_file_dict['time'], key=lambda time:time)
     fig = plt.figure(figsize=(6,7))
     i[1].add_cont('n_jr', target=fig, add_cbar=True)
 
@@ -179,9 +178,10 @@ for i in enumerate(iono_file_dict['iono_file']):
     
     plt.title('N Jr - {}'.format(i[1].attrs['time']))
     print('plotting frame {:03d} at time {}'.format(i[0], i[1].attrs['time']))
-    plt.savefig('{}/plots/ie_njr_{}.png'.format(directory.path, i[0]), dpi=300)
+    #plt.savefig('{}/plots/ie_njr_{}.png'.format(directory.path, i[0]), dpi=300)
 
     #To plot with time in the filename:
-    #plt.savefig('{}ie_njr_{}.png'.format(directory, i[1].attrs['time'].strftime("%Y%m%d-%H%M%S")), dpi=300)
+    plt.savefig('{}/IE/plots/ie_njr_{}.png'.format(directory.path, 
+                        i[1].attrs['time'].strftime("%Y%m%d-%H%M%S")), dpi=300)
     
     plt.close()
