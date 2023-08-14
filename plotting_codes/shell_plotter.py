@@ -463,6 +463,75 @@ def plot_outflow_sf_deliver():
     
     return
 
+def plot_outflow_fluence_grouped():
+    fluence_dict = {'fluence_v1': [], 'fluence_v2':[], 'fluence_v3':[], 
+                    'fluence_v4':[], 'fluence_nominal':[]}
+    
+    path_v1 = '/Volumes/hard_drive_mac/run_data/run_10eV_IBC_sf/GM/shl_mhd_4_n00008000_00951259.outs'
+    path_v2 = '/Volumes/hard_drive_mac/run_data/run_50eV_IBC_sf/GM/shl_mhd_4_n00008000_00951309.outs'
+    path_v3 = '/Volumes/hard_drive_mac/run_data/run_75eV_IBC_sf/GM/shl_mhd_4_n00008000_00951343.outs'
+    path_v4 = '/Volumes/hard_drive_mac/run_data/run_150eV_IBC_sf/GM/shl_mhd_4_n00008000_00951193.outs'
+    path_nominal = '/Volumes/hard_drive_mac/run_data/run_nominal_IBC_sf/GM/shl_mhd_4_n00008000_00951401.outs'
+
+    IBC_v1 = ShellSlice(path_v1, 3.0)
+    IBC_v2 = ShellSlice(path_v2, 3.0)
+    IBC_v3 = ShellSlice(path_v3, 3.0)
+    IBC_v4 = ShellSlice(path_v4, 3.0)
+    IBC_nominal = ShellSlice(path_nominal, 3.0)
+
+    for iFrame in range(0,21):
+        IBC_v1.switch_frame(iFrame)    
+        IBC_v2.switch_frame(iFrame)
+        IBC_v3.switch_frame(iFrame)
+        IBC_v4.switch_frame(iFrame)
+        IBC_nominal.switch_frame(iFrame)
+        
+        IBC_v1.calc_radflu('rho')
+        IBC_v2.calc_radflu('rho')
+        IBC_v3.calc_radflu('rho')
+        IBC_v4.calc_radflu('rho')
+        IBC_nominal.calc_radflu('rho')
+        
+        fluence_dict['fluence_v1'].append(IBC_v1['rho_rflu'])
+        fluence_dict['fluence_v2'].append(IBC_v2['rho_rflu'])
+        fluence_dict['fluence_v3'].append(IBC_v3['rho_rflu'])
+        fluence_dict['fluence_v4'].append(IBC_v4['rho_rflu'])
+        fluence_dict['fluence_nominal'].append(IBC_nominal['rho_rflu'])
+    
+    t_sim_hr = IBC_v3.attrs['runtimes']/3600
+    
+    fig = plt.figure(figsize=[12,10])
+    fig, ax = plt.subplots()
+    plt.plot(t_sim_hr,fluence_dict['fluence_v1'],'b', 
+             marker = 'o', markersize = 6, label='10 eV')
+    plt.plot(t_sim_hr,fluence_dict['fluence_v2'],'g', 
+             marker = '*', markersize = 6, label='50 eV')
+    plt.plot(t_sim_hr,fluence_dict['fluence_v3'],'r', 
+             marker = '+', markersize = 6, label='75 eV')
+    plt.plot(t_sim_hr,fluence_dict['fluence_v4'],'c', 
+             marker = 'x', markersize = 6, label='150 eV')
+    plt.plot(t_sim_hr,fluence_dict['fluence_nominal'],
+             'k-', markersize = 8, label='Nominal Conditions')
+    
+    line1 = 0
+    line2 = 5
+    line3 = 10
+    
+    plt.xlabel('Simulation time, t, [hours]')
+    plt.ylabel('Fluence, [particles*m/s]')
+    plt.text(2.5, -.5e26,'+3 nT')
+    plt.text(6.5, -.5e26,'-10 nT')
+    ax.set_xlim(0,10)
+    ax.axvspan(line1, line2, alpha=0.1, color='green')
+    ax.axvspan(line2, line3, alpha=0.1, color='red')
+    ax.grid()
+    #plt.title('Fluence - Parallel Velocity IBCs 3.0 Re')
+    plt.legend()
+    
+    return
+    
+    
+
 '''
 print(is_multi)
 
